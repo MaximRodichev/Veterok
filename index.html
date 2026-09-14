@@ -15,270 +15,252 @@
 :root{
   --bg:#f0ede6;--surface:#fff;--surface2:#f5f3ee;
   --text:#1e1e1c;--text2:#5a5956;--text3:#999790;
-  --accent:#1a3a5c;--accent2:#2a5a8c;--accent-bg:#e8f0f8;
+  --accent:#1a3a5c;--accent-bg:#e8f0f8;
   --danger:#8b1a1a;--danger-bg:#fdecea;
   --green:#1a5c2a;--green-bg:#e8f5ec;
   --border:#dedad2;--radius:10px;
-  --header:52px;
+  --hh:52px;
 }
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100dvh;overflow-x:hidden}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100dvh}
 
-/* ── Header ── */
-.header{position:fixed;top:0;left:0;right:0;z-index:100;background:var(--accent);color:#fff;height:var(--header);display:flex;align-items:center;padding:0 12px;padding-top:env(safe-area-inset-top);gap:8px}
-.header h1{font-size:17px;font-weight:700;flex:1}
-.header .tab-btn{background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:6px;padding:5px 10px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
-.header .tab-btn.active{background:rgba(255,255,255,.3)}
+.hdr{position:fixed;top:0;left:0;right:0;z-index:100;background:var(--accent);color:#fff;
+  height:var(--hh);display:flex;align-items:center;padding:0 10px;
+  padding-top:env(safe-area-inset-top);gap:6px}
+.hdr h1{font-size:16px;font-weight:700;flex:1}
+.hdr .tb{background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:6px;
+  padding:5px 10px;font-size:12px;font-weight:600;cursor:pointer}
+.hdr .tb.on{background:rgba(255,255,255,.35)}
 
-/* ── Layout ── */
-.page{display:none;padding:calc(var(--header) + env(safe-area-inset-top) + 12px) 12px 80px;max-width:520px;margin:0 auto}
-.page.active{display:block}
+.page{display:none;padding:calc(var(--hh) + env(safe-area-inset-top) + 10px) 11px 76px;max-width:520px;margin:0 auto}
+.page.on{display:block}
 
-/* ── Cards ── */
-.card{background:var(--surface);border-radius:var(--radius);padding:14px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,.07)}
-.card-title{font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+.card{background:var(--surface);border-radius:var(--radius);padding:13px;margin-bottom:9px;box-shadow:0 1px 3px rgba(0,0,0,.07)}
+.ct{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:9px}
 
-/* ── Form ── */
-label{display:block;font-size:11px;color:var(--text2);font-weight:600;margin-bottom:3px;margin-top:10px}
-label:first-child{margin-top:0}
-input,select{width:100%;height:42px;border:1.5px solid var(--border);border-radius:7px;background:var(--surface2);font-size:15px;font-weight:500;color:var(--text);padding:0 11px;outline:none;-webkit-appearance:none}
-input:focus,select:focus{border-color:var(--accent)}
-.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+lbl{display:block;font-size:11px;color:var(--text2);font-weight:600;margin:9px 0 3px}
+lbl:first-child{margin-top:0}
+input,select{width:100%;height:42px;border:1.5px solid var(--border);border-radius:7px;
+  background:var(--surface2);font-size:16px;font-weight:500;color:var(--text);
+  padding:0 11px;outline:none;-webkit-appearance:none;appearance:none}
+input:focus,select:focus{border-color:var(--accent);background:#fff}
+.r2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 
-/* ── Buttons ── */
-.btn{display:block;width:100%;height:46px;border:none;border-radius:var(--radius);font-size:15px;font-weight:700;cursor:pointer;margin-top:10px;transition:opacity .1s,transform .08s}
-.btn:active{opacity:.82;transform:scale(.98)}
-.btn-primary{background:var(--accent);color:#fff}
-.btn-danger{background:var(--danger);color:#fff}
-.btn-ghost{background:var(--surface2);color:var(--text);border:1.5px solid var(--border)}
-.btn-sm{height:34px;font-size:13px;border-radius:7px;margin-top:0}
-.btn-xs{height:28px;font-size:12px;border-radius:6px;padding:0 10px;display:inline-flex;align-items:center;cursor:pointer;border:none;font-weight:600}
-.btn-xs.accent{background:var(--accent-bg);color:var(--accent)}
-.btn-xs.danger{background:var(--danger-bg);color:var(--danger)}
-.btn-xs.green{background:var(--green-bg);color:var(--green)}
+.btn{display:block;width:100%;height:46px;border:none;border-radius:var(--radius);
+  font-size:15px;font-weight:700;cursor:pointer;margin-top:9px}
+.btn:active{opacity:.8;transform:scale(.98)}
+.bp{background:var(--accent);color:#fff}
+.bg{background:var(--surface2);color:var(--text);border:1.5px solid var(--border)}
 
-/* ── Stat rows ── */
-.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
-.stat{background:var(--surface2);border-radius:8px;padding:10px 12px}
-.stat-label{font-size:11px;color:var(--text3);margin-bottom:2px}
-.stat-value{font-size:17px;font-weight:700;color:var(--text)}
-.stat-value.big{font-size:22px}
-.stat.accent{background:var(--accent-bg)}
-.stat.accent .stat-value{color:var(--accent)}
-.stat.danger{background:var(--danger-bg)}
-.stat.danger .stat-value{color:var(--danger)}
+.bxs{height:28px;font-size:12px;border-radius:6px;padding:0 10px;
+  display:inline-flex;align-items:center;cursor:pointer;border:none;font-weight:600}
+.bxs.a{background:var(--accent-bg);color:var(--accent)}
+.bxs.d{background:var(--danger-bg);color:var(--danger)}
+.bxs.g{background:var(--green-bg);color:var(--green)}
 
-/* ── Table ── */
-.data-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;font-size:13px}
-.data-row+.data-row{border-top:1px solid var(--border)}
-.data-row .key{color:var(--text2)}
-.data-row .val{font-weight:700;text-align:right}
+/* Stat grid */
+.sg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:9px}
+.st{background:var(--surface2);border-radius:8px;padding:10px 11px}
+.sl{font-size:11px;color:var(--text3);margin-bottom:2px}
+.sv{font-size:16px;font-weight:700}
+.sv.big{font-size:22px}
+.st.ac{background:var(--accent-bg)}.st.ac .sv{color:var(--accent)}
+.st.dn{background:var(--danger-bg)}.st.dn .sv{color:var(--danger)}
 
-/* ── Target list ── */
-.target-item{background:var(--surface);border-radius:var(--radius);padding:12px 14px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,.06);cursor:pointer;border-left:4px solid transparent}
-.target-item.selected{border-left-color:var(--accent);background:var(--accent-bg)}
-.target-item .t-name{font-size:15px;font-weight:700;margin-bottom:4px}
-.target-item .t-meta{font-size:12px;color:var(--text2);display:flex;gap:12px;flex-wrap:wrap}
-.target-item .t-actions{display:flex;gap:6px;margin-top:8px}
+.dr{display:flex;justify-content:space-between;align-items:center;padding:7px 0;font-size:13px}
+.dr+.dr{border-top:1px solid var(--border)}
+.dr .k{color:var(--text2)}.dr .v{font-weight:700;text-align:right}
 
-/* ── Shots history ── */
-.shot-item{background:var(--surface2);border-radius:8px;padding:10px 12px;margin-bottom:6px;border-left:3px solid var(--border)}
-.shot-item.first{border-left-color:var(--accent)}
-.shot-item .sh-num{font-size:11px;color:var(--text3);margin-bottom:4px}
-.shot-item .sh-row{display:flex;justify-content:space-between;font-size:13px;margin-bottom:2px}
-.shot-item .sh-row .k{color:var(--text2)}
-.shot-item .sh-row .v{font-weight:700}
-.shot-item .sh-result{margin-top:6px;padding-top:6px;border-top:1px solid var(--border);font-size:12px;color:var(--text2)}
+/* Target list */
+.ti{background:var(--surface);border-radius:var(--radius);padding:11px 13px;
+  margin-bottom:7px;box-shadow:0 1px 3px rgba(0,0,0,.06);
+  cursor:pointer;border-left:4px solid transparent}
+.ti.sel{border-left-color:var(--accent);background:var(--accent-bg)}
+.ti .tn{font-size:15px;font-weight:700;margin-bottom:3px}
+.ti .tm{font-size:12px;color:var(--text2);display:flex;gap:10px;flex-wrap:wrap}
+.ti .ta{display:flex;gap:6px;margin-top:7px}
 
-/* ── Error / success ── */
-.msg{font-size:12px;min-height:16px;margin:4px 0}
-.msg.err{color:var(--danger)}
-.msg.ok{color:var(--green)}
+/* Shot items */
+.si{background:var(--surface2);border-radius:8px;padding:10px 12px;
+  margin-bottom:6px;border-left:3px solid var(--border)}
+.si.f{border-left-color:var(--accent)}
+.si .sn{font-size:11px;color:var(--text3);margin-bottom:3px}
+.si .sr{display:flex;justify-content:space-between;font-size:13px;margin-bottom:2px}
+.si .sr .k{color:var(--text2)}.si .sr .v{font-weight:700}
+.si .sx{margin-top:5px;padding-top:5px;border-top:1px solid var(--border);font-size:12px;color:var(--text2)}
 
-/* ── Section header ── */
-.section-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-.section-hdr h2{font-size:15px;font-weight:700}
+.msg{font-size:12px;min-height:16px;margin:3px 0}
+.err{color:var(--danger)}.ok{color:var(--green)}
 
-/* ── Bottom nav ── */
-.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);display:flex;padding-bottom:env(safe-area-inset-bottom);z-index:99}
-.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 4px;border:none;background:none;cursor:pointer;color:var(--text2);font-size:10px;font-weight:600;gap:2px}
-.nav-btn.active{color:var(--accent)}
-.nav-btn svg{width:22px;height:22px}
+.sh2{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}
+.sh2 h2{font-size:15px;font-weight:700}
+.empty{text-align:center;padding:28px 16px;color:var(--text3);font-size:14px}
+.badge{display:inline-block;background:var(--accent);color:#fff;border-radius:10px;
+  padding:1px 7px;font-size:11px;font-weight:700;margin-left:4px}
 
-.divider{height:1px;background:var(--border);margin:10px 0}
-.empty{text-align:center;padding:32px 16px;color:var(--text3);font-size:14px}
-.badge{display:inline-block;background:var(--accent);color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;font-weight:700;margin-left:4px}
+/* Highlight box */
+.hl{background:var(--accent);color:#fff;border-radius:8px;padding:10px 13px;margin-bottom:8px}
+.hl .hll{font-size:11px;opacity:.7;margin-bottom:1px}
+.hl .hlv{font-size:26px;font-weight:800}
 
-.highlight{background:var(--accent);color:#fff;border-radius:6px;padding:10px 14px;margin-bottom:8px}
-.highlight .hl-label{font-size:11px;opacity:.75;margin-bottom:2px}
-.highlight .hl-value{font-size:24px;font-weight:800}
+/* Bottom nav */
+.bnav{position:fixed;bottom:0;left:0;right:0;background:var(--surface);
+  border-top:1px solid var(--border);display:flex;
+  padding-bottom:env(safe-area-inset-bottom);z-index:99}
+.nb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:7px 4px;border:none;background:none;cursor:pointer;
+  color:var(--text2);font-size:10px;font-weight:600;gap:2px}
+.nb.on{color:var(--accent)}
+.nb svg{width:22px;height:22px}
 </style>
 </head>
 <body>
 
-<!-- Header -->
-<div class="header">
+<div class="hdr">
   <h1>🎯 АртКалк</h1>
-  <button class="tab-btn active" onclick="showPage('op')">ОП</button>
-  <button class="tab-btn" onclick="showPage('targets')">Цели</button>
-  <button class="tab-btn" onclick="showPage('fire')">Стрельба</button>
+  <button class="tb on" onclick="nav('op')">ОП</button>
+  <button class="tb" onclick="nav('tg')">Цели</button>
+  <button class="tb" onclick="nav('fi')">Стрельба</button>
 </div>
 
-<!-- PAGE 1: Огневая позиция -->
-<div class="page active" id="page-op">
+<!-- ═══ ОП ═══ -->
+<div class="page on" id="p-op">
   <div class="card">
-    <div class="card-title">Огневая позиция</div>
-    <div class="row2">
-      <div><label>X огневой</label><input id="op-x" type="number" placeholder="5194748" inputmode="numeric"></div>
-      <div><label>Y огневой</label><input id="op-y" type="number" placeholder="5698967" inputmode="numeric"></div>
+    <div class="ct">Огневая позиция</div>
+    <div class="r2">
+      <div><lbl>X огневой</lbl><input id="op-x" type="number" inputmode="numeric" placeholder="5194748"></div>
+      <div><lbl>Y огневой</lbl><input id="op-y" type="number" inputmode="numeric" placeholder="5698967"></div>
     </div>
-    <label>Угломер ОТН (д.у.)</label>
-    <input id="op-otn" type="text" placeholder="35-52" autocomplete="off" autocorrect="off">
-    <label>Основное направление ОН (д.у.)</label>
-    <input id="op-on" type="text" placeholder="51-00" autocomplete="off" autocorrect="off">
-    <button class="btn btn-primary" onclick="saveOP()">Сохранить ОП</button>
+    <lbl>Угломер ОТН (д.у. — формат 35-52 или 3552)</lbl>
+    <input id="op-otn" type="text" inputmode="numeric" placeholder="35-52" autocomplete="off" autocorrect="off" spellcheck="false">
+    <lbl>Основное направление ОН (д.у.)</lbl>
+    <input id="op-on" type="text" inputmode="numeric" placeholder="51-00" autocomplete="off" autocorrect="off" spellcheck="false">
+    <button class="btn bp" onclick="saveOP()">Сохранить ОП</button>
     <p class="msg" id="op-msg"></p>
   </div>
 
-  <div class="card" id="op-result" style="display:none">
-    <div class="card-title">Текущая ОП</div>
-    <div id="op-result-body"></div>
+  <div class="card" id="op-res" style="display:none">
+    <div class="ct">Текущая ОП</div>
+    <div id="op-res-body"></div>
   </div>
 
   <div class="card">
-    <div class="card-title">Система и заряд</div>
-    <label>Система</label>
-    <select id="sys-type">
-      <option value="2S12">2С12 / 2Б11 (Санта)</option>
+    <div class="ct">Система и заряд</div>
+    <lbl>Система</lbl>
+    <select id="sys"><option>2С12 / 2Б11 (Санта)</option></select>
+    <lbl>Мина</lbl>
+    <select id="mine"><option>ОФ-843Б</option></select>
+    <lbl>Взрыватель</lbl>
+    <select id="fuze"><option value="M12">М-12</option><option value="G7">ГВМЗ-7</option></select>
+    <lbl>Заряд</lbl>
+    <select id="charge">
+      <option value="D">Дальнобойный — 2431–7201 м</option>
+      <option value="6">Шестой — 2001–5915 м</option>
+      <option value="5">Пятый — 1737–5118 м</option>
+      <option value="4" selected>Четвёртый — 1456–4284 м</option>
+      <option value="3">Третий — 1141–3357 м</option>
+      <option value="2">Второй — 830–2447 м</option>
+      <option value="1">Первый — 476–1418 м</option>
     </select>
-    <label>Мина</label>
-    <select id="mine-type">
-      <option value="OF843B">ОФ-843Б</option>
-    </select>
-    <label>Взрыватель</label>
-    <select id="fuze-type">
-      <option value="M12">М-12</option>
-      <option value="GVMZ7">ГВМЗ-7</option>
-    </select>
-    <label>Заряд</label>
-    <select id="charge" onchange="updateChargeInfo()">
-      <option value="D">Дальнобойный (325 м/с) — 2431–7201 м</option>
-      <option value="6">Шестой (277 м/с) — 2001–5915 м</option>
-      <option value="5">Пятый (252 м/с) — 1737–5118 м</option>
-      <option value="4" selected>Четвёртый (228 м/с) — 1456–4284 м</option>
-      <option value="3">Третий (196 м/с) — 1141–3357 м</option>
-      <option value="2">Второй (164 м/с) — 830–2447 м</option>
-      <option value="1">Первый (122 м/с) — 476–1418 м</option>
-    </select>
-    <button class="btn btn-ghost btn-sm" style="margin-top:10px" onclick="saveCharge()">Применить</button>
-    <p class="msg" id="charge-msg"></p>
+    <button class="btn bg" style="margin-top:9px" onclick="saveCharge()">Применить заряд</button>
+    <p class="msg" id="ch-msg"></p>
   </div>
 </div>
 
-<!-- PAGE 2: Список целей -->
-<div class="page" id="page-targets">
+<!-- ═══ ЦЕЛИ ═══ -->
+<div class="page" id="p-tg">
   <div class="card">
-    <div class="card-title">Добавить цель</div>
-    <label>Название</label>
-    <input id="t-name" type="text" placeholder="Цель 1 ПЕХОТА" autocomplete="off">
-    <div class="row2">
-      <div><label>X цели</label><input id="t-x" type="number" placeholder="5196064" inputmode="numeric"></div>
-      <div><label>Y цели</label><input id="t-y" type="number" placeholder="5695679" inputmode="numeric"></div>
+    <div class="ct">Добавить цель</div>
+    <lbl>Название</lbl>
+    <input id="t-nm" type="text" placeholder="Цель 1 ПЕХОТА" autocomplete="off">
+    <div class="r2">
+      <div><lbl>X цели</lbl><input id="t-x" type="number" inputmode="numeric" placeholder="5196064"></div>
+      <div><lbl>Y цели</lbl><input id="t-y" type="number" inputmode="numeric" placeholder="5695679"></div>
     </div>
-    <button class="btn btn-primary" onclick="addTarget()">Добавить цель</button>
+    <button class="btn bp" onclick="addTarget()">Добавить цель</button>
     <p class="msg" id="t-msg"></p>
   </div>
 
-  <div class="section-hdr">
-    <h2>Цели <span class="badge" id="target-count">0</span></h2>
-    <button class="btn-xs danger" onclick="clearTargets()">Очистить</button>
+  <div class="sh2">
+    <h2>Цели <span class="badge" id="t-cnt">0</span></h2>
+    <button class="bxs d" onclick="clearTargets()">Очистить все</button>
   </div>
-  <div id="target-list"><div class="empty">Цели не добавлены</div></div>
+  <div id="t-list"><div class="empty">Цели не добавлены</div></div>
 </div>
 
-<!-- PAGE 3: Стрельба по цели -->
-<div class="page" id="page-fire">
-  <div id="fire-no-target" class="empty" style="padding-top:60px">
-    Выберите цель во вкладке «Цели»
-  </div>
+<!-- ═══ СТРЕЛЬБА ═══ -->
+<div class="page" id="p-fi">
+  <div id="fi-empty" class="empty" style="padding-top:60px">Выберите цель во вкладке «Цели»</div>
+  <div id="fi-body" style="display:none">
 
-  <div id="fire-content" style="display:none">
     <!-- Установки -->
-    <div class="card" id="fire-setup">
-      <div class="card-title" id="fire-target-name">—</div>
-      <div class="stat-grid">
-        <div class="stat accent">
-          <div class="stat-label">Прицел</div>
-          <div class="stat-value big" id="fs-pricel">—</div>
+    <div class="card">
+      <div class="ct" id="fi-tname">—</div>
+      <div class="sg">
+        <div class="st ac">
+          <div class="sl">Прицел, дел</div>
+          <div class="sv big" id="fi-pricel">—</div>
         </div>
-        <div class="stat">
-          <div class="stat-label">Угломер</div>
-          <div class="stat-value big" id="fs-uglomer">—</div>
+        <div class="st">
+          <div class="sl">Угломер</div>
+          <div class="sv big" id="fi-uglomer">—</div>
         </div>
       </div>
-      <div class="data-row"><span class="key">Дальность</span><span class="val" id="fs-dist">—</span></div>
-      <div class="data-row"><span class="key">Доворот от ОН</span><span class="val" id="fs-dovorot">—</span></div>
-      <div class="data-row"><span class="key">Дир. угол топо</span><span class="val" id="fs-dirug">—</span></div>
-      <div class="data-row"><span class="key">Время полёта</span><span class="val" id="fs-time">—</span></div>
-      <div class="data-row"><span class="key">Заряд</span><span class="val" id="fs-charge">—</span></div>
+      <div class="dr"><span class="k">Дальность</span><span class="v" id="fi-dist">—</span></div>
+      <div class="dr"><span class="k">Доворот от ОН</span><span class="v" id="fi-dov">—</span></div>
+      <div class="dr"><span class="k">Дир. угол топо</span><span class="v" id="fi-dir">—</span></div>
+      <div class="dr"><span class="k">Время полёта</span><span class="v" id="fi-time">—</span></div>
+      <div class="dr"><span class="k">Заряд</span><span class="v" id="fi-charge">—</span></div>
     </div>
 
     <!-- Ввод разрыва -->
     <div class="card">
-      <div class="card-title" id="shot-card-title">Разрыв #1</div>
-
-      <label>Абс. доворот от цели (д.у., + вправо / − влево)</label>
-      <input id="sh-dovorot" type="text" placeholder="0-00" autocomplete="off" autocorrect="off">
-
-      <div class="row2">
-        <div><label>Недолёт (−) / Перелёт (+), м</label><input id="sh-short" type="number" placeholder="-50"></div>
-        <div><label>Правее (+) / Левее (−), м</label><input id="sh-dev" type="number" placeholder="30"></div>
+      <div class="ct" id="sh-title">Разрыв #1 — от цели</div>
+      <lbl>Абс. доворот разрыва от цели (д.у., + вправо / − влево)</lbl>
+      <input id="sh-dov" type="text" placeholder="0-00" autocomplete="off" autocorrect="off" spellcheck="false" inputmode="text">
+      <div class="r2">
+        <div><lbl>Недолёт (−) / Перелёт (+), м</lbl><input id="sh-sf" type="number" placeholder="-50"></div>
+        <div><lbl>Правее (+) / Левее (−), м</lbl><input id="sh-dv" type="number" placeholder="30"></div>
       </div>
-      <p class="msg err" id="sh-err"></p>
-      <button class="btn btn-primary" onclick="addShot()">Зафиксировать разрыв</button>
+      <p class="err msg" id="sh-err"></p>
+      <button class="btn bp" onclick="addShot()">Зафиксировать разрыв</button>
     </div>
 
-    <!-- История -->
-    <div class="section-hdr">
+    <div class="sh2">
       <h2>История разрывов</h2>
-      <button class="btn-xs danger" onclick="clearShots()">Сбросить</button>
+      <button class="bxs d" onclick="clearShots()">Сбросить</button>
     </div>
-    <div id="shot-list"><div class="empty">Разрывов нет</div></div>
+    <div id="sh-list"><div class="empty">Разрывов нет</div></div>
 
-    <!-- Суммарное смещение -->
-    <div class="card" id="total-deviation" style="display:none;margin-top:4px">
-      <div class="card-title">Суммарное смещение от цели</div>
-      <div class="stat-grid">
-        <div class="stat"><div class="stat-label">⬆ Север / ⬇ Юг</div><div class="stat-value" id="tot-ns">—</div></div>
-        <div class="stat"><div class="stat-label">➡ Восток / ⬅ Запад</div><div class="stat-value" id="tot-ew">—</div></div>
+    <div class="card" id="tot-card" style="display:none;margin-top:2px">
+      <div class="ct">Суммарное смещение последнего разрыва от цели</div>
+      <div class="sg">
+        <div class="st"><div class="sl">⬆ Север / ⬇ Юг</div><div class="sv" id="tot-ns">—</div></div>
+        <div class="st"><div class="sl">➡ Восток / ⬅ Запад</div><div class="sv" id="tot-ew">—</div></div>
       </div>
-      <div class="data-row"><span class="key">Итог (расстояние)</span><span class="val" id="tot-dist">—</span></div>
+      <div class="dr"><span class="k">Расстояние от цели</span><span class="v" id="tot-d">—</span></div>
     </div>
   </div>
 </div>
 
 <!-- Bottom nav -->
-<div class="bottom-nav">
-  <button class="nav-btn active" id="nav-op" onclick="showPage('op')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/></svg>
-    ОП
+<div class="bnav">
+  <button class="nb on" id="nb-op" onclick="nav('op')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/></svg>ОП
   </button>
-  <button class="nav-btn" id="nav-targets" onclick="showPage('targets')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
-    Цели
+  <button class="nb" id="nb-tg" onclick="nav('tg')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>Цели
   </button>
-  <button class="nav-btn" id="nav-fire" onclick="showPage('fire')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z"/></svg>
-    Стрельба
+  <button class="nb" id="nb-fi" onclick="nav('fi')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z"/></svg>Стрельба
   </button>
 </div>
 
 <script>
-// ═══════════════════════════════════════
-// ТАБЛИЦЫ СТРЕЛЬБЫ 2С12/2Б11 ОФ-843Б М-12 (ТС РГ №98)
+// ══════════════════════════════════════════════════
+// ТАБЛИЦЫ СТРЕЛЬБЫ 2С12/2Б11, ОФ-843Б, М-12
 // [дальность_м, прицел_дел, время_с]
-// ═══════════════════════════════════════
-const TABLES = {
+// ══════════════════════════════════════════════════
+const TBL = {
   D:{name:"ДАЛЬНОБОЙНЫЙ",v0:325,data:[
     [2431,417,56],[2500,422,56],[2600,429,56],[2700,436,56],[2800,443,56],[2900,450,56],
     [3000,457,56],[3100,465,56],[3200,472,56],[3300,479,56],[3400,487,56],[3500,494,56],
@@ -338,386 +320,371 @@ const TABLES = {
   ]},
 };
 
-// ═══════════════════════════════════════
+// ══════════════════════════════════════════════════
 // STATE
-// ═══════════════════════════════════════
-let state = {
-  op: null,       // {x,y,otn,on}
-  charge: '4',
-  targets: [],    // [{id,name,x,y,shots:[]}]
-  activeTarget: null,
-};
+// ══════════════════════════════════════════════════
+let S = {op:null, charge:'4', targets:[], active:null};
+try{ const s=localStorage.getItem('ac3'); if(s) S=JSON.parse(s); }catch(e){}
+function save(){ try{localStorage.setItem('ac3',JSON.stringify(S));}catch(e){} }
 
-function loadState(){
-  try{ const s=localStorage.getItem('artcalc2'); if(s) state=JSON.parse(s); }catch(e){}
-}
-function saveState(){
-  try{ localStorage.setItem('artcalc2',JSON.stringify(state)); }catch(e){}
-}
-loadState();
-
-// ═══════════════════════════════════════
+// ══════════════════════════════════════════════════
 // УТИЛИТЫ
-// ═══════════════════════════════════════
-function parseDU(s){
-  s=String(s).trim().replace(',','.');
-  const neg=s.startsWith('-');
-  const abs=s.replace(/^[+-]/,'');
+// ══════════════════════════════════════════════════
+
+
+function parseDU(raw){
+  // Формат XX-YY = XX*100+YY тысячных угломера
+  // "51-00"=5100, "35-52"=3552, "-2-36"=-236, "5100"=5100
+  if(raw===null||raw===undefined) return null;
+  let s = String(raw).trim().replace(/[,\s]/g,'');
+  const neg = s.startsWith('-');
+  s = s.replace(/^[+-]/,'');
   let v;
-  if(abs.includes('-')){
-    const p=abs.split('-');
+  if(s.includes('-')){
+    const p = s.split('-');
     if(p.length!==2) return null;
     const a=parseInt(p[0]),b=parseInt(p[1]);
     if(isNaN(a)||isNaN(b)) return null;
-    v=a+b/100;
-  } else { v=parseFloat(abs); if(isNaN(v)) return null; }
-  return neg?-v:v;
+    v = a*100 + b;
+  } else {
+    v = parseFloat(s);
+    if(isNaN(v)) return null;
+  }
+  return neg ? -v : v;
 }
 
-function fmtDU(du){
-  const neg=du<0; du=Math.abs(du);
-  const major=Math.floor(du);
-  const minor=Math.round((du-major)*100);
-  const s=`${major}-${String(minor).padStart(2,'0')}`;
-  return neg?`-${s}`:s;
+// Форматирование тысячных → "51-00"
+function fmtDU(thou){
+  // thou — целое число тысячных
+  thou = Math.round(thou);
+  const neg = thou < 0;
+  thou = Math.abs(thou);
+  thou = ((thou % 6000) + 6000) % 6000;
+  const major = Math.floor(thou / 100);
+  const minor = thou % 100;
+  const s = `${major}-${String(minor).padStart(2,'0')}`;
+  return neg ? `-${s}` : s;
 }
 
-function fmtDUdelta(du){
-  return (du>=0?'+':'')+fmtDU(du);
+// Дирекционный угол в тысячных
+// Топосистема: X — север, Y — восток
+// α = atan2(ΔY, ΔX) = угол от севера по часовой
+function dirDU(dx, dy){
+  let deg = Math.atan2(dy, dx) * 180 / Math.PI;
+  if(deg < 0) deg += 360;
+  return Math.round(deg / 360 * 6000);
 }
 
-// Дирекционный угол в д.у. из ΔY, ΔX (прямоугольные координаты)
-// В топо системе: x — на север, y — на восток
-function dirAngleDU(dx, dy){
-  // atan2(dy, dx) даёт угол от оси X (север) по часовой = дирекционный угол
-  let rad = Math.atan2(dy, dx);
-  if(rad < 0) rad += 2*Math.PI;
-  return rad * (3000/Math.PI); // радианы → д.у. (6000 д.у. = 2π)
-}
+function duToRad(thou){ return thou / 6000 * 2 * Math.PI; }
 
-function duToRad(du){ return du * Math.PI / 3000; }
-
-// Интерполяция прицела по дальности
-function interpolate(distM, chargeKey){
-  const tbl = TABLES[chargeKey];
-  if(!tbl) return null;
-  const data = tbl.data;
-  if(distM < data[0][0] || distM > data[data.length-1][0]) return null;
-  for(let i=0;i<data.length-1;i++){
-    const [d0,p0,t0]=data[i], [d1,p1,t1]=data[i+1];
-    if(distM>=d0 && distM<=d1){
+// Линейная интерполяция прицела по дальности
+function interp(distM, chKey){
+  const t = TBL[chKey];
+  if(!t) return null;
+  const d = t.data;
+  if(distM < d[0][0] || distM > d[d.length-1][0]) return null;
+  for(let i=0;i<d.length-1;i++){
+    const [d0,p0,t0]=d[i],[d1,p1,t1]=d[i+1];
+    if(distM>=d0&&distM<=d1){
       const k=(distM-d0)/(d1-d0);
       return {
         pricel: Math.round(p0+k*(p1-p0)),
-        time: Math.round((t0+k*(t1-t0))*10)/10,
-        dP_100: Math.abs(Math.round((p1-p0)/(d1-d0)*100)), // ΔП на 100м
+        time:   Math.round((t0+k*(t1-t0))*10)/10,
+        dP:     Math.abs(Math.round((p1-p0)/(d1-d0)*100)), // ΔП/100м
       };
     }
   }
   return null;
 }
 
-// Расчёт установок для цели
-function calcTarget(target){
-  if(!state.op) return null;
-  const {x:ox,y:oy,otn,on} = state.op;
-  const dx = target.x - ox; // ΔX (север+)
-  const dy = target.y - oy; // ΔY (восток+)
+// Расчёт установок от ОП до цели
+function calcTarget(t){
+  if(!S.op) return null;
+  const {x:ox,y:oy,otn,on} = S.op;
+  const dx = t.x - ox;  // ΔX (север+)
+  const dy = t.y - oy;  // ΔY (восток+)
   const dist = Math.sqrt(dx*dx+dy*dy);
-  const dirDU = dirAngleDU(dx, dy);
+
+  const dDU   = dirDU(dx, dy);          // дир.угол на цель
   const otnDU = parseDU(otn);
   const onDU  = parseDU(on);
-  // Доворот = дир.угол цели - ОН
-  let dovorotDU = dirDU - onDU;
-  // Нормализация в диапазон (-30-00 ... +30-00)
-  while(dovorotDU >  3000) dovorotDU -= 6000;
-  while(dovorotDU < -3000) dovorotDU += 6000;
-  // Угломер = ОТН + Доворот
-  let uglomerDU = otnDU + dovorotDU;
-  while(uglomerDU < 0) uglomerDU += 6000;
-  while(uglomerDU >= 6000) uglomerDU -= 6000;
-  const fire = interpolate(dist, state.charge);
-  return { dist, dirDU, dovorotDU, uglomerDU, fire };
+
+  // Доворот = дир.угол - ОН  (нормализация ±3000 тысячных)
+  let dovDU = dDU - onDU;
+  while(dovDU >  3000) dovDU -= 6000;
+  while(dovDU < -3000) dovDU += 6000;
+
+  // Угломер = ОТН + Доворот  (нормализация 0..5999 тысячных)
+  let uglDU = otnDU + dovDU;
+  while(uglDU <    0) uglDU += 6000;
+  while(uglDU >= 6000) uglDU -= 6000;
+
+  const fire = interp(dist, S.charge);
+  return {dist, dDU, dovDU, uglDU, fire};
 }
 
-// Расчёт смещения разрыва от цели
-function calcShot(dovorotDU, shortM, devM){
-  const dirRad = duToRad(dovorotDU);
-  // Вдоль направления: перелёт(+) дальше цели, недолёт(-) ближе
-  const rx = shortM * Math.sin(dirRad);
-  const ry = shortM * Math.cos(dirRad); // ΔX (север)
-  // Правее(+) перпендикуляр
-  const px = devM * Math.sin(dirRad + Math.PI/2);
-  const py = devM * Math.cos(dirRad + Math.PI/2);
-  const east  = rx + px;
-  const north = ry + py;
-  return { north, east, dist: Math.sqrt(north*north+east*east) };
+// Смещение разрыва от цели (каждый раз от цели — не суммируется)
+// dovDU — абс.доворот разрыва (от цели)
+// shortM — недолёт(-)/перелёт(+)
+// devM   — правее(+)/левее(-)
+function calcDeviation(dovDU, shortM, devM){
+  const dirRad = duToRad(dovDU); // тысячные → радианы
+  // недолёт(-) → снаряд ближе к орудию (от цели)
+  const nx = shortM * Math.cos(dirRad); // север
+  const ex = shortM * Math.sin(dirRad); // восток
+  // перпендикуляр вправо
+  const nr = devM * Math.cos(dirRad + Math.PI/2);
+  const er = devM * Math.sin(dirRad + Math.PI/2);
+  const north = nx + nr;
+  const east  = ex + er;
+  return {north, east, dist: Math.sqrt(north*north+east*east)};
 }
 
 function fmtAxis(v, pos, neg){
   if(Math.abs(v)<0.5) return '≈ 0 м';
-  return (v>0?'+':'')+v.toFixed(0)+' м ('+(v>0?pos:neg)+')';
+  return (v>0?'+':'')+Math.round(v)+' м ('+(v>0?pos:neg)+')';
 }
 
-// ═══════════════════════════════════════
-// NAVIGATION
-// ═══════════════════════════════════════
-function showPage(p){
-  document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(el=>el.classList.remove('active'));
-  document.querySelectorAll('.header .tab-btn').forEach(el=>el.classList.remove('active'));
-  document.getElementById('page-'+p).classList.add('active');
-  document.getElementById('nav-'+p).classList.add('active');
-  document.querySelectorAll('.header .tab-btn').forEach(btn=>{
-    if(btn.getAttribute('onclick')===`showPage('${p}')`) btn.classList.add('active');
+// ══════════════════════════════════════════════════
+// НАВИГАЦИЯ
+// ══════════════════════════════════════════════════
+function nav(p){
+  ['op','tg','fi'].forEach(x=>{
+    document.getElementById('p-'+x).classList.toggle('on', x===p);
+    document.getElementById('nb-'+x).classList.toggle('on', x===p);
   });
-  if(p==='targets') renderTargets();
-  if(p==='fire') renderFire();
+  document.querySelectorAll('.hdr .tb').forEach(b=>{
+    b.classList.toggle('on', b.getAttribute('onclick')===`nav('${p}')`);
+  });
+  if(p==='tg') renderTargets();
+  if(p==='fi') renderFire();
 }
 
-// ═══════════════════════════════════════
+// ══════════════════════════════════════════════════
 // ОП
-// ═══════════════════════════════════════
+// ══════════════════════════════════════════════════
 function saveOP(){
-  const x=parseFloat(document.getElementById('op-x').value);
-  const y=parseFloat(document.getElementById('op-y').value);
-  const otn=document.getElementById('op-otn').value.trim();
-  const on =document.getElementById('op-on').value.trim();
-  const msg=document.getElementById('op-msg');
-  if(isNaN(x)||isNaN(y)||!otn||!on){msg.textContent='Заполните все поля';return;}
-  if(parseDU(otn)===null){msg.textContent='Неверный формат ОТН';return;}
-  if(parseDU(on)===null){msg.textContent='Неверный формат ОН';return;}
-  state.op={x,y,otn,on};
-  saveState();
-  msg.textContent='✓ ОП сохранена';
+  const x   = parseFloat(document.getElementById('op-x').value);
+  const y   = parseFloat(document.getElementById('op-y').value);
+  const otn = document.getElementById('op-otn').value.trim();
+  const on  = document.getElementById('op-on').value.trim();
+  const msg = document.getElementById('op-msg');
+
+  if(isNaN(x)||isNaN(y)||!otn||!on){ msg.className='msg err'; msg.textContent='Заполните все поля'; return; }
+  if(parseDU(otn)===null){ msg.className='msg err'; msg.textContent='Неверный формат ОТН (пример: 35-52)'; return; }
+  if(parseDU(on)===null){  msg.className='msg err'; msg.textContent='Неверный формат ОН (пример: 51-00)'; return; }
+
+  S.op = {x,y,otn,on};
+  save();
+  msg.className='msg ok'; msg.textContent='✓ ОП сохранена';
   renderOPResult();
-  renderTargets();
+  renderFire();
 }
 
 function renderOPResult(){
-  const r=document.getElementById('op-result');
-  const b=document.getElementById('op-result-body');
-  if(!state.op){r.style.display='none';return;}
-  r.style.display='block';
-  const {x,y,otn,on}=state.op;
-  b.innerHTML=`
-    <div class="data-row"><span class="key">X / Y</span><span class="val">${x.toLocaleString()} / ${y.toLocaleString()}</span></div>
-    <div class="data-row"><span class="key">Угломер ОТН</span><span class="val">${otn}</span></div>
-    <div class="data-row"><span class="key">Основное направление</span><span class="val">${on}</span></div>
+  const el = document.getElementById('op-res');
+  if(!S.op){ el.style.display='none'; return; }
+  el.style.display='block';
+  const {x,y,otn,on}=S.op;
+  document.getElementById('op-res-body').innerHTML=`
+    <div class="dr"><span class="k">X / Y</span><span class="v">${Math.round(x).toLocaleString()} / ${Math.round(y).toLocaleString()}</span></div>
+    <div class="dr"><span class="k">Угломер ОТН</span><span class="v">${otn} (${fmtDU(parseDU(otn))} д.у.)</span></div>
+    <div class="dr"><span class="k">Осн. направление</span><span class="v">${on} (${fmtDU(parseDU(on))} д.у.)</span></div>
   `;
 }
 
 function saveCharge(){
-  state.charge = document.getElementById('charge').value;
-  saveState();
-  document.getElementById('charge-msg').textContent='✓ Заряд установлен: '+TABLES[state.charge].name;
+  S.charge = document.getElementById('charge').value;
+  save();
+  document.getElementById('ch-msg').className='msg ok';
+  document.getElementById('ch-msg').textContent='✓ '+TBL[S.charge].name;
   renderFire();
 }
 
-function updateChargeInfo(){ }
-
-// Init OP form
-if(state.op){
-  document.getElementById('op-x').value=state.op.x;
-  document.getElementById('op-y').value=state.op.y;
-  document.getElementById('op-otn').value=state.op.otn;
-  document.getElementById('op-on').value=state.op.on;
+// INIT OP
+if(S.op){
+  document.getElementById('op-x').value=S.op.x;
+  document.getElementById('op-y').value=S.op.y;
+  document.getElementById('op-otn').value=S.op.otn;
+  document.getElementById('op-on').value=S.op.on;
   renderOPResult();
 }
-document.getElementById('charge').value=state.charge||'4';
+document.getElementById('charge').value=S.charge||'4';
 
-// ═══════════════════════════════════════
+// ══════════════════════════════════════════════════
 // ЦЕЛИ
-// ═══════════════════════════════════════
+// ══════════════════════════════════════════════════
 function addTarget(){
-  const name=document.getElementById('t-name').value.trim();
-  const x=parseFloat(document.getElementById('t-x').value);
-  const y=parseFloat(document.getElementById('t-y').value);
+  const nm=document.getElementById('t-nm').value.trim();
+  const x =parseFloat(document.getElementById('t-x').value);
+  const y =parseFloat(document.getElementById('t-y').value);
   const msg=document.getElementById('t-msg');
-  if(!name){msg.textContent='Введите название цели';return;}
-  if(isNaN(x)||isNaN(y)){msg.textContent='Введите координаты X и Y';return;}
-  const t={id:Date.now(),name,x,y,shots:[]};
-  state.targets.push(t);
-  saveState();
-  msg.textContent='✓ Цель добавлена';
-  document.getElementById('t-name').value='';
+  if(!nm){msg.className='msg err';msg.textContent='Введите название';return;}
+  if(isNaN(x)||isNaN(y)){msg.className='msg err';msg.textContent='Введите координаты X и Y';return;}
+  S.targets.push({id:Date.now(),name:nm,x,y,shots:[]});
+  save();
+  msg.className='msg ok';msg.textContent='✓ Цель добавлена';
+  document.getElementById('t-nm').value='';
   document.getElementById('t-x').value='';
   document.getElementById('t-y').value='';
   renderTargets();
 }
 
-function selectTarget(id){
-  state.activeTarget=id;
-  saveState();
+function selTarget(id){
+  S.active=id; save();
   renderTargets();
-  showPage('fire');
+  nav('fi');
 }
 
-function deleteTarget(id){
-  state.targets=state.targets.filter(t=>t.id!==id);
-  if(state.activeTarget===id) state.activeTarget=null;
-  saveState();
-  renderTargets();
+function delTarget(id){
+  S.targets=S.targets.filter(t=>t.id!==id);
+  if(S.active===id) S.active=null;
+  save(); renderTargets();
 }
 
 function clearTargets(){
   if(!confirm('Удалить все цели?')) return;
-  state.targets=[];
-  state.activeTarget=null;
-  saveState();
-  renderTargets();
+  S.targets=[]; S.active=null; save(); renderTargets();
 }
 
 function renderTargets(){
-  const list=document.getElementById('target-list');
-  document.getElementById('target-count').textContent=state.targets.length;
-  if(!state.targets.length){list.innerHTML='<div class="empty">Цели не добавлены</div>';return;}
-  list.innerHTML=state.targets.map(t=>{
-    const calc=state.op?calcTarget(t):null;
-    const isActive=t.id===state.activeTarget;
-    const meta=calc?
-      `<span>Д: ${Math.round(calc.dist)} м</span><span>Прицел: ${calc.fire?calc.fire.pricel:'—'} дел</span><span>Разрывов: ${t.shots.length}</span>`:
-      `<span>X:${t.x} Y:${t.y}</span><span>Разрывов: ${t.shots.length}</span>`;
-    return `<div class="target-item ${isActive?'selected':''}" onclick="selectTarget(${t.id})">
-      <div class="t-name">${t.name}${isActive?' ◀ активная':''}</div>
-      <div class="t-meta">${meta}</div>
-      <div class="t-actions" onclick="event.stopPropagation()">
-        <button class="btn-xs green" onclick="selectTarget(${t.id})">Выбрать</button>
-        <button class="btn-xs danger" onclick="deleteTarget(${t.id})">Удалить</button>
+  document.getElementById('t-cnt').textContent=S.targets.length;
+  const el=document.getElementById('t-list');
+  if(!S.targets.length){el.innerHTML='<div class="empty">Цели не добавлены</div>';return;}
+  el.innerHTML=S.targets.map(t=>{
+    const c=S.op?calcTarget(t):null;
+    const isSel=t.id===S.active;
+    const meta=c
+      ?`<span>Д: ${Math.round(c.dist)} м</span><span>Прицел: ${c.fire?c.fire.pricel+' дел':'вне диап.'}</span><span>Разрывов: ${t.shots.length}</span>`
+      :`<span>X:${t.x} Y:${t.y}</span><span>Разрывов: ${t.shots.length}</span>`;
+    return `<div class="ti ${isSel?'sel':''}" onclick="selTarget(${t.id})">
+      <div class="tn">${t.name}${isSel?' ◀ активная':''}</div>
+      <div class="tm">${meta}</div>
+      <div class="ta" onclick="event.stopPropagation()">
+        <button class="bxs g" onclick="selTarget(${t.id})">Выбрать</button>
+        <button class="bxs d" onclick="delTarget(${t.id})">Удалить</button>
       </div>
     </div>`;
   }).join('');
 }
 
-// ═══════════════════════════════════════
+// ══════════════════════════════════════════════════
 // СТРЕЛЬБА
-// ═══════════════════════════════════════
-function getActiveTarget(){
-  return state.targets.find(t=>t.id===state.activeTarget)||null;
-}
+// ══════════════════════════════════════════════════
+function getAT(){ return S.targets.find(t=>t.id===S.active)||null; }
 
 function renderFire(){
-  const t=getActiveTarget();
-  document.getElementById('fire-no-target').style.display=t?'none':'block';
-  document.getElementById('fire-content').style.display=t?'block':'none';
+  const t=getAT();
+  document.getElementById('fi-empty').style.display=t?'none':'block';
+  document.getElementById('fi-body').style.display=t?'block':'none';
   if(!t) return;
 
-  document.getElementById('fire-target-name').textContent=t.name;
-  document.getElementById('shot-card-title').textContent=`Разрыв #${t.shots.length+1}`;
+  document.getElementById('fi-tname').textContent=t.name;
+  document.getElementById('sh-title').textContent=`Разрыв #${t.shots.length+1} — от цели`;
+  document.getElementById('fi-charge').textContent=TBL[S.charge].name;
 
-  const calc=state.op?calcTarget(t):null;
-  if(calc){
-    document.getElementById('fs-dist').textContent=Math.round(calc.dist)+' м';
-    document.getElementById('fs-dirug').textContent=fmtDU(calc.dirDU)+' д.у.';
-    document.getElementById('fs-dovorot').textContent=fmtDUdelta(calc.dovorotDU)+' д.у.';
-    document.getElementById('fs-uglomer').textContent=fmtDU(calc.uglomerDU);
-    document.getElementById('fs-charge').textContent=TABLES[state.charge].name;
-    if(calc.fire){
-      document.getElementById('fs-pricel').textContent=calc.fire.pricel;
-      document.getElementById('fs-time').textContent=calc.fire.time+' с';
+  const c=S.op?calcTarget(t):null;
+  if(c){
+    document.getElementById('fi-dist').textContent=Math.round(c.dist)+' м';
+    document.getElementById('fi-dir').textContent=fmtDU(c.dDU)+' д.у.';
+    document.getElementById('fi-dov').textContent=(c.dovDU>=0?'+':'')+fmtDU(Math.abs(c.dovDU))+' д.у. ('+(c.dovDU<0?'влево':'вправо')+')';
+    document.getElementById('fi-uglomer').textContent=fmtDU(c.uglDU);
+    if(c.fire){
+      document.getElementById('fi-pricel').textContent=c.fire.pricel;
+      document.getElementById('fi-time').textContent=c.fire.time+' с (ΔП='+c.fire.dP+'/100м)';
     } else {
-      document.getElementById('fs-pricel').textContent='—';
-      document.getElementById('fs-time').textContent='вне диапазона';
+      document.getElementById('fi-pricel').textContent='—';
+      document.getElementById('fi-time').textContent='вне диапазона';
     }
+  } else {
+    ['fi-dist','fi-dir','fi-dov','fi-uglomer','fi-pricel','fi-time'].forEach(id=>document.getElementById(id).textContent='—');
   }
-
   renderShots(t);
 }
 
 function addShot(){
-  const t=getActiveTarget();
+  const t=getAT();
   if(!t) return;
-  const dovStr=document.getElementById('sh-dovorot').value;
-  const shortM=parseFloat(document.getElementById('sh-short').value);
-  const devM=parseFloat(document.getElementById('sh-dev').value);
-  const err=document.getElementById('sh-err');
+  const dovStr=document.getElementById('sh-dov').value;
+  const sfM   =parseFloat(document.getElementById('sh-sf').value);
+  const dvM   =parseFloat(document.getElementById('sh-dv').value);
+  const err   =document.getElementById('sh-err');
   err.textContent='';
 
-  if(!dovStr||isNaN(shortM)||isNaN(devM)){err.textContent='Заполните все поля';return;}
+  if(!dovStr||isNaN(sfM)||isNaN(dvM)){err.textContent='Заполните все три поля';return;}
   const dovDU=parseDU(dovStr);
   if(dovDU===null){err.textContent='Неверный формат доворота';return;}
 
-  const deviation=calcShot(dovDU, shortM, devM);
-  const prevDovDU = t.shots.length>0 ? t.shots[t.shots.length-1].dovDU : null;
-  const deltaDov = prevDovDU!==null ? dovDU - prevDovDU : null;
+  // Смещение каждого разрыва — ТОЛЬКО от цели, независимо
+  const dev=calcDeviation(dovDU, sfM, dvM);
 
-  // Угломер для этого разрыва = ОТН + (доворот_на_цель + доворот_разрыва)
-  let uglomerShot = null;
-  if(state.op){
-    const calc=calcTarget(t);
-    const otnDU=parseDU(state.op.otn);
-    uglomerShot = otnDU + dovDU;
-    while(uglomerShot<0) uglomerShot+=6000;
-    while(uglomerShot>=6000) uglomerShot-=6000;
+  // Угломер для этого разрыва
+  let uglShot=null;
+  if(S.op){
+    const otnDU=parseDU(S.op.otn); // тысячные
+    uglShot = otnDU + dovDU;
+    while(uglShot<0) uglShot+=6000;
+    while(uglShot>=6000) uglShot-=6000;
   }
 
-  const shot={
-    num: t.shots.length+1,
-    dovDU, shortM, devM,
-    deltaDov,
-    deviation,
-    uglomerShot,
-    ts: Date.now(),
-  };
-  t.shots.push(shot);
-  saveState();
+  // Дельта доворота от предыдущего разрыва (только для справки)
+  const prev=t.shots.length>0?t.shots[t.shots.length-1]:null;
+  const deltaDov=prev!==null ? dovDU-prev.dovDU : null;
 
-  document.getElementById('sh-dovorot').value='';
-  document.getElementById('sh-short').value='';
-  document.getElementById('sh-dev').value='';
+  t.shots.push({num:t.shots.length+1, dovDU, sfM, dvM, deltaDov, dev, uglShot});
+  save();
+
+  document.getElementById('sh-dov').value='';
+  document.getElementById('sh-sf').value='';
+  document.getElementById('sh-dv').value='';
   renderFire();
 }
 
 function clearShots(){
-  const t=getActiveTarget();
+  const t=getAT();
   if(!t) return;
-  if(!confirm('Сбросить историю разрывов по этой цели?')) return;
-  t.shots=[];
-  saveState();
-  renderFire();
+  if(!confirm('Сбросить историю разрывов?')) return;
+  t.shots=[]; save(); renderFire();
 }
 
 function renderShots(t){
-  const list=document.getElementById('shot-list');
-  const totDiv=document.getElementById('total-deviation');
+  const el=document.getElementById('sh-list');
+  const totCard=document.getElementById('tot-card');
 
   if(!t.shots.length){
-    list.innerHTML='<div class="empty">Разрывов нет</div>';
-    totDiv.style.display='none';
+    el.innerHTML='<div class="empty">Разрывов нет</div>';
+    totCard.style.display='none';
     return;
   }
 
-  // Суммарное смещение = сумма всех разрывов
-  let totalNorth=0, totalEast=0;
-  t.shots.forEach(s=>{ totalNorth+=s.deviation.north; totalEast+=s.deviation.east; });
-  const totalDist=Math.sqrt(totalNorth*totalNorth+totalEast*totalEast);
-
-  list.innerHTML=[...t.shots].reverse().map(s=>{
-    const deltaStr = s.deltaDov!==null ? ` (${fmtDUdelta(s.deltaDov)})` : '';
-    const ugStr = s.uglomerShot!==null ? fmtDU(s.uglomerShot) : '—';
-    return `<div class="shot-item ${s.num===1?'first':''}">
-      <div class="sh-num">Разрыв #${s.num}</div>
-      <div class="sh-row"><span class="k">Доворот</span><span class="v">${fmtDU(s.dovDU)}${deltaStr} д.у.</span></div>
-      <div class="sh-row"><span class="k">Недолёт/перелёт</span><span class="v">${s.shortM>0?'+':''}${s.shortM} м</span></div>
-      <div class="sh-row"><span class="k">Право/лево</span><span class="v">${s.devM>0?'+':''}${s.devM} м</span></div>
-      <div class="sh-row"><span class="k">Угломер наводчика</span><span class="v">${ugStr} д.у.</span></div>
-      <div class="sh-result">
-        Смещение от цели: ${fmtAxis(s.deviation.north,'север','юг')} / ${fmtAxis(s.deviation.east,'восток','запад')}
+  el.innerHTML=[...t.shots].reverse().map(s=>{
+    const dStr=s.deltaDov!==null
+      ? ` <span style="color:var(--text3);font-weight:400">(${s.deltaDov>=0?'+':''}${fmtDU(Math.abs(s.deltaDov))} от пред.)</span>`
+      : '';
+    const ugStr=s.uglShot!==null?fmtDU(s.uglShot):'—';
+    return `<div class="si ${s.num===1?'f':''}">
+      <div class="sn">Разрыв #${s.num}</div>
+      <div class="sr"><span class="k">Доворот</span><span class="v">${fmtDU(s.dovDU)} д.у.${dStr}</span></div>
+      <div class="sr"><span class="k">Недолёт/Перелёт</span><span class="v">${s.sfM>0?'+':''}${s.sfM} м</span></div>
+      <div class="sr"><span class="k">Право/Лево</span><span class="v">${s.dvM>0?'+':''}${s.dvM} м</span></div>
+      <div class="sr"><span class="k">Угломер наводчика</span><span class="v" style="color:var(--accent)">${ugStr} д.у.</span></div>
+      <div class="sx">
+        От цели: ${fmtAxis(s.dev.north,'север','юг')} / ${fmtAxis(s.dev.east,'восток','запад')} — ${Math.round(s.dev.dist)} м
       </div>
     </div>`;
   }).join('');
 
-  totDiv.style.display='block';
-  document.getElementById('tot-ns').textContent=fmtAxis(totalNorth,'север','юг');
-  document.getElementById('tot-ew').textContent=fmtAxis(totalEast,'восток','запад');
-  document.getElementById('tot-dist').textContent=totalDist.toFixed(0)+' м';
+  // Показываем смещение последнего разрыва
+  const last=t.shots[t.shots.length-1];
+  totCard.style.display='block';
+  document.getElementById('tot-ns').textContent=fmtAxis(last.dev.north,'север','юг');
+  document.getElementById('tot-ew').textContent=fmtAxis(last.dev.east,'восток','запад');
+  document.getElementById('tot-d').textContent=Math.round(last.dev.dist)+' м от цели';
 }
 
-// ═══════════════════════════════════════
 // INIT
-// ═══════════════════════════════════════
 renderTargets();
-if(state.activeTarget) renderFire();
+renderFire();
 
 if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
 </script>
