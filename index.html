@@ -215,8 +215,6 @@ input:focus,select:focus{border-color:var(--accent);background:#fff}
     <!-- Ввод разрыва -->
     <div class="card">
       <div class="ct" id="sh-title">Разрыв #1 — от цели</div>
-      <lbl>Абс. доворот разрыва от цели (д.у., + вправо / − влево)</lbl>
-      <input id="sh-dov" type="text" placeholder="0-00" autocomplete="off" autocorrect="off" spellcheck="false" inputmode="text">
       <div class="r2">
         <div><lbl>Недолёт (−) / Перелёт (+), м</lbl><input id="sh-sf" type="number" placeholder="-50"></div>
         <div><lbl>Правее (+) / Левее (−), м</lbl><input id="sh-dv" type="number" placeholder="30"></div>
@@ -605,36 +603,27 @@ function renderFire(){
 function addShot(){
   const t=getAT();
   if(!t) return;
-  const dovStr=document.getElementById('sh-dov').value;
-  const sfM   =parseFloat(document.getElementById('sh-sf').value);
-  const dvM   =parseFloat(document.getElementById('sh-dv').value);
-  const err   =document.getElementById('sh-err');
+  const sfM=parseFloat(document.getElementById('sh-sf').value);
+  const dvM=parseFloat(document.getElementById('sh-dv').value);
+  const err=document.getElementById('sh-err');
   err.textContent='';
 
-  if(!dovStr||isNaN(sfM)||isNaN(dvM)){err.textContent='Заполните все три поля';return;}
-  const dovDU=parseDU(dovStr);
-  if(dovDU===null){err.textContent='Неверный формат доворота';return;}
+  if(isNaN(sfM)||isNaN(dvM)){err.textContent='Заполните оба поля';return;}
+  if(!S.op){err.textContent='Сначала сохраните ОП';return;}
 
-  // Смещение каждого разрыва — ТОЛЬКО от цели, независимо
-  const dev=calcDeviation(dovDU, sfM, dvM);
+  // Направление стрельбы = дир.угол на цель (уже посчитан)
+  const c=calcTarget(t);
+  if(!c){err.textContent='Ошибка расчёта цели';return;}
 
-  // Угломер для этого разрыва
-  let uglShot=null;
-  if(S.op){
-    const otnDU=parseDU(S.op.otn); // тысячные
-    uglShot = otnDU + dovDU;
-    while(uglShot<0) uglShot+=6000;
-    while(uglShot>=6000) uglShot-=6000;
-  }
+  // Смещение разрыва от цели — вдоль направления на цель
+  const dev=calcDeviation(c.dDU, sfM, dvM);
 
-  // Дельта доворота от предыдущего разрыва (только для справки)
-  const prev=t.shots.length>0?t.shots[t.shots.length-1]:null;
-  const deltaDov=prev!==null ? dovDU-prev.dovDU : null;
+  // Угломер для этого разрыва = угломер на цель (направление не меняется)
+  const uglShot=c.uglDU;
 
-  t.shots.push({num:t.shots.length+1, dovDU, sfM, dvM, deltaDov, dev, uglShot});
+  t.shots.push({num:t.shots.length+1, sfM, dvM, dev, uglShot, dirDU:c.dDU});
   save();
 
-  document.getElementById('sh-dov').value='';
   document.getElementById('sh-sf').value='';
   document.getElementById('sh-dv').value='';
   renderFire();
@@ -658,16 +647,12 @@ function renderShots(t){
   }
 
   el.innerHTML=[...t.shots].reverse().map(s=>{
-    const dStr=s.deltaDov!==null
-      ? ` <span style="color:var(--text3);font-weight:400">(${s.deltaDov>=0?'+':''}${fmtDU(Math.abs(s.deltaDov))} от пред.)</span>`
-      : '';
-    const ugStr=s.uglShot!==null?fmtDU(s.uglShot):'—';
+    const ugStr=s.uglShot!==undefined?fmtDU(s.uglShot):'—';
     return `<div class="si ${s.num===1?'f':''}">
       <div class="sn">Разрыв #${s.num}</div>
-      <div class="sr"><span class="k">Доворот</span><span class="v">${fmtDU(s.dovDU)} д.у.${dStr}</span></div>
       <div class="sr"><span class="k">Недолёт/Перелёт</span><span class="v">${s.sfM>0?'+':''}${s.sfM} м</span></div>
       <div class="sr"><span class="k">Право/Лево</span><span class="v">${s.dvM>0?'+':''}${s.dvM} м</span></div>
-      <div class="sr"><span class="k">Угломер наводчика</span><span class="v" style="color:var(--accent)">${ugStr} д.у.</span></div>
+      <div class="sr"><span class="k">Угломер наводчика</span><span class="v" style="color:var(--accent);font-size:16px">${ugStr} д.у.</span></div>
       <div class="sx">
         От цели: ${fmtAxis(s.dev.north,'север','юг')} / ${fmtAxis(s.dev.east,'восток','запад')} — ${Math.round(s.dev.dist)} м
       </div>
