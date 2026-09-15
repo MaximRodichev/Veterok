@@ -77,6 +77,11 @@ input:focus,select:focus{border-color:var(--accent);background:#fff}
 .ti.sel{border-left-color:var(--accent);background:var(--accent-bg)}
 .ti .tn{font-size:15px;font-weight:700;margin-bottom:3px}
 .ti .tm{font-size:12px;color:var(--text2);display:flex;gap:10px;flex-wrap:wrap}
+.ti .tm .ugl{color:var(--accent);font-weight:700}
+.ti .tc{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+.ti .cbtn{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;
+  color:var(--accent);background:var(--accent-bg);border-radius:6px;padding:4px 9px;cursor:pointer}
+.ti .cbtn.copied{background:var(--green-bg);color:var(--green)}
 .ti .ta{display:flex;gap:6px;margin-top:7px}
 
 /* Shot items */
@@ -210,6 +215,7 @@ input:focus,select:focus{border-color:var(--accent);background:#fff}
       <div class="dr"><span class="k">Дир. угол топо</span><span class="v" id="fi-dir">—</span></div>
       <div class="dr"><span class="k">Время полёта</span><span class="v" id="fi-time">—</span></div>
       <div class="dr"><span class="k">Заряд</span><span class="v" id="fi-charge">—</span></div>
+      <div class="dr" id="fi-corr" style="display:none"><span class="k">Поправка (от последнего разрыва)</span><span class="v"></span></div>
     </div>
 
     <!-- Ввод разрыва -->
@@ -395,6 +401,29 @@ function interp(distM, chKey){
   return null;
 }
 
+function normDU(v){
+  v = ((v % 6000) + 6000) % 6000;
+  return v;
+}
+function normDov(v){
+  while(v >  3000) v -= 6000;
+  while(v < -3000) v += 6000;
+  return v;
+}
+
+// Эффективные (пристрелянные) установки = геометрия до цели + накопленные
+// поправки по дальности/угломеру от предыдущих разрывов этой цели
+function calcEffective(t, c){
+  const corrUgl   = t.corrUgl   || 0;
+  const corrRange = t.corrRange || 0;
+  let effDist = c.dist + corrRange;
+  if(effDist < 1) effDist = 1;
+  const effUglDU = normDU(c.uglDU + corrUgl);
+  const effDovDU = normDov(c.dovDU + corrUgl);
+  const fire = interp(effDist, S.charge);
+  return {dist: effDist, uglDU: effUglDU, dovDU: effDovDU, fire};
+}
+
 // Расчёт установок от ОП до цели
 function calcTarget(t){
   if(!S.op) return null;
@@ -519,7 +548,7 @@ function addTarget(){
   const msg=document.getElementById('t-msg');
   if(!nm){msg.className='msg err';msg.textContent='Введите название';return;}
   if(isNaN(x)||isNaN(y)){msg.className='msg err';msg.textContent='Введите координаты X и Y';return;}
-  S.targets.push({id:Date.now(),name:nm,x,y,shots:[]});
+  S.targets.push({id:Date.now(),name:nm,x,y,shots:[],corrUgl:0,corrRange:0});
   save();
   msg.className='msg ok';msg.textContent='✓ Цель добавлена';
   document.getElementById('t-nm').value='';
@@ -535,6 +564,7 @@ function selTarget(id){
 }
 
 function delTarget(id){
+  if(!confirm('Удалить цель?')) return;
   S.targets=S.targets.filter(t=>t.id!==id);
   if(S.active===id) S.active=null;
   save(); renderTargets();
@@ -549,21 +579,50 @@ function renderTargets(){
   document.getElementById('t-cnt').textContent=S.targets.length;
   const el=document.getElementById('t-list');
   if(!S.targets.length){el.innerHTML='<div class="empty">Цели не добавлены</div>';return;}
-  el.innerHTML=S.targets.map(t=>{
+  el.innerHTML=[...S.targets].reverse().map(t=>{
     const c=S.op?calcTarget(t):null;
+    const eff=c?calcEffective(t,c):null;
     const isSel=t.id===S.active;
     const meta=c
-      ?`<span>Д: ${Math.round(c.dist)} м</span><span>Прицел: ${c.fire?c.fire.pricel+' дел':'вне диап.'}</span><span>Разрывов: ${t.shots.length}</span>`
-      :`<span>X:${t.x} Y:${t.y}</span><span>Разрывов: ${t.shots.length}</span>`;
+      ?`<span>Д: ${Math.round(c.dist)} м</span><span class="ugl">Угломер: ${fmtDU(eff.uglDU)}</span><span>Прицел: ${eff.fire?eff.fire.pricel+' дел':'вне диап.'}</span><span>Разрывов: ${t.shots.length}</span>`
+      :`<span>Разрывов: ${t.shots.length}</span>`;
     return `<div class="ti ${isSel?'sel':''}" onclick="selTarget(${t.id})">
       <div class="tn">${t.name}${isSel?' ◀ активная':''}</div>
       <div class="tm">${meta}</div>
+      <div class="tc" onclick="event.stopPropagation()">
+        <span class="cbtn" onclick="copyCoord(this,'${t.x}')">📋 X: ${t.x}</span>
+        <span class="cbtn" onclick="copyCoord(this,'${t.y}')">📋 Y: ${t.y}</span>
+        <span class="cbtn" onclick="copyCoord(this,'${t.x} ${t.y}')">📋 X Y</span>
+      </div>
       <div class="ta" onclick="event.stopPropagation()">
         <button class="bxs g" onclick="selTarget(${t.id})">Выбрать</button>
         <button class="bxs d" onclick="delTarget(${t.id})">Удалить</button>
       </div>
     </div>`;
   }).join('');
+}
+
+function copyCoord(el, text){
+  const orig = el.textContent;
+  function done(){
+    el.textContent='✓ Скопировано';
+    el.classList.add('copied');
+    setTimeout(()=>{ el.textContent=orig; el.classList.remove('copied'); }, 1100);
+  }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(done).catch(()=>fallbackCopy(text,done));
+  } else {
+    fallbackCopy(text,done);
+  }
+}
+
+function fallbackCopy(text,cb){
+  const ta=document.createElement('textarea');
+  ta.value=text; ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.focus(); ta.select();
+  try{ document.execCommand('copy'); }catch(e){}
+  document.body.removeChild(ta);
+  cb();
 }
 
 // ══════════════════════════════════════════════════
@@ -582,20 +641,31 @@ function renderFire(){
   document.getElementById('fi-charge').textContent=TBL[S.charge].name;
 
   const c=S.op?calcTarget(t):null;
-  if(c){
+  const eff=c?calcEffective(t,c):null;
+  if(c && eff){
     document.getElementById('fi-dist').textContent=Math.round(c.dist)+' м';
     document.getElementById('fi-dir').textContent=fmtDU(c.dDU)+' д.у.';
-    document.getElementById('fi-dov').textContent=(c.dovDU>=0?'+':'')+fmtDU(Math.abs(c.dovDU))+' д.у. ('+(c.dovDU<0?'влево':'вправо')+')';
-    document.getElementById('fi-uglomer').textContent=fmtDU(c.uglDU);
-    if(c.fire){
-      document.getElementById('fi-pricel').textContent=c.fire.pricel;
-      document.getElementById('fi-time').textContent=c.fire.time+' с (ΔП='+c.fire.dP+'/100м)';
+    document.getElementById('fi-dov').textContent=(eff.dovDU>=0?'+':'')+fmtDU(Math.abs(eff.dovDU))+' д.у. ('+(eff.dovDU<0?'влево':'вправо')+')';
+    document.getElementById('fi-uglomer').textContent=fmtDU(eff.uglDU);
+    if(eff.fire){
+      document.getElementById('fi-pricel').textContent=eff.fire.pricel;
+      document.getElementById('fi-time').textContent=eff.fire.time+' с (ΔП='+eff.fire.dP+'/100м)';
     } else {
       document.getElementById('fi-pricel').textContent='—';
       document.getElementById('fi-time').textContent='вне диапазона';
     }
+    const corrEl=document.getElementById('fi-corr');
+    if((t.corrUgl||0)!==0 || (t.corrRange||0)!==0){
+      corrEl.style.display='flex';
+      corrEl.querySelector('.v').textContent=
+        (t.corrRange>=0?'+':'')+Math.round(t.corrRange)+' м, '+
+        (t.corrUgl>=0?'+':'')+fmtDU(Math.abs(t.corrUgl))+' д.у.';
+    } else {
+      corrEl.style.display='none';
+    }
   } else {
     ['fi-dist','fi-dir','fi-dov','fi-uglomer','fi-pricel','fi-time'].forEach(id=>document.getElementById(id).textContent='—');
+    document.getElementById('fi-corr').style.display='none';
   }
   renderShots(t);
 }
@@ -615,13 +685,24 @@ function addShot(){
   const c=calcTarget(t);
   if(!c){err.textContent='Ошибка расчёта цели';return;}
 
+  // Эффективные (пристрелянные) установки — с учётом поправок от прошлых разрывов
+  const eff=calcEffective(t,c);
+
   // Смещение разрыва от цели — вдоль направления на цель
   const dev=calcDeviation(c.dDU, sfM, dvM);
 
-  // Угломер для этого разрыва = угломер на цель (направление не меняется)
-  const uglShot=c.uglDU;
+  // Угломер/прицел, реально применённые для этого разрыва
+  const uglShot=eff.uglDU;
+  const pricelShot=eff.fire?eff.fire.pricel:null;
 
-  t.shots.push({num:t.shots.length+1, sfM, dvM, dev, uglShot, dirDU:c.dDU});
+  t.shots.push({num:t.shots.length+1, sfM, dvM, dev, uglShot, pricelShot, dirDU:c.dDU});
+
+  // Поправка всегда считается от цели (по «сырым» данным), а не наращивается
+  // поверх предыдущей поправки — самый свежий разрыв полностью её пересчитывает
+  t.corrRange = -sfM;
+  const uglMiss = Math.round(1000*dvM/c.dist);
+  t.corrUgl = -uglMiss;
+
   save();
 
   document.getElementById('sh-sf').value='';
@@ -633,7 +714,7 @@ function clearShots(){
   const t=getAT();
   if(!t) return;
   if(!confirm('Сбросить историю разрывов?')) return;
-  t.shots=[]; save(); renderFire();
+  t.shots=[]; t.corrUgl=0; t.corrRange=0; save(); renderFire();
 }
 
 function renderShots(t){
@@ -653,6 +734,7 @@ function renderShots(t){
       <div class="sr"><span class="k">Недолёт/Перелёт</span><span class="v">${s.sfM>0?'+':''}${s.sfM} м</span></div>
       <div class="sr"><span class="k">Право/Лево</span><span class="v">${s.dvM>0?'+':''}${s.dvM} м</span></div>
       <div class="sr"><span class="k">Угломер наводчика</span><span class="v" style="color:var(--accent);font-size:16px">${ugStr} д.у.</span></div>
+      ${s.pricelShot!==undefined&&s.pricelShot!==null?`<div class="sr"><span class="k">Прицел наводчика</span><span class="v">${s.pricelShot} дел</span></div>`:''}
       <div class="sx">
         От цели: ${fmtAxis(s.dev.north,'север','юг')} / ${fmtAxis(s.dev.east,'восток','запад')} — ${Math.round(s.dev.dist)} м
       </div>
