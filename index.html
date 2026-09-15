@@ -175,8 +175,8 @@ input:focus,select:focus{border-color:var(--accent);background:#fff}
 <div class="page" id="p-tg">
   <div class="card">
     <div class="ct">Добавить цель</div>
-    <lbl>Название</lbl>
-    <input id="t-nm" type="text" placeholder="Цель 1 ПЕХОТА" autocomplete="off">
+    <lbl>Тип цели</lbl>
+    <input id="t-nm" type="text" placeholder="ПЕХОТА" autocomplete="off" value="ПЕХОТА">
     <div class="r2">
       <div><lbl>X цели</lbl><input id="t-x" type="number" inputmode="numeric" placeholder="5196064"></div>
       <div><lbl>Y цели</lbl><input id="t-y" type="number" inputmode="numeric" placeholder="5695679"></div>
@@ -327,7 +327,7 @@ const TBL = {
 // ══════════════════════════════════════════════════
 // STATE
 // ══════════════════════════════════════════════════
-let S = {op:null, charge:'4', targets:[], active:null};
+let S = {op:null, charge:'4', targets:[], active:null, tgNum:0};
 try{ const s=localStorage.getItem('ac3'); if(s) S=JSON.parse(s); }catch(e){}
 function save(){ try{localStorage.setItem('ac3',JSON.stringify(S));}catch(e){} }
 
@@ -542,16 +542,16 @@ document.getElementById('charge').value=S.charge||'4';
 // ЦЕЛИ
 // ══════════════════════════════════════════════════
 function addTarget(){
-  const nm=document.getElementById('t-nm').value.trim();
+  const type=document.getElementById('t-nm').value.trim()||'ПЕХОТА';
   const x =parseFloat(document.getElementById('t-x').value);
   const y =parseFloat(document.getElementById('t-y').value);
   const msg=document.getElementById('t-msg');
-  if(!nm){msg.className='msg err';msg.textContent='Введите название';return;}
   if(isNaN(x)||isNaN(y)){msg.className='msg err';msg.textContent='Введите координаты X и Y';return;}
-  S.targets.push({id:Date.now(),name:nm,x,y,shots:[],corrUgl:0,corrRange:0});
+  S.tgNum = (S.tgNum||0) + 1;
+  const nm = `Цель ${S.tgNum} ${type}`;
+  S.targets.push({id:Date.now(),num:S.tgNum,name:nm,x,y,shots:[],corrUgl:0,corrRange:0});
   save();
-  msg.className='msg ok';msg.textContent='✓ Цель добавлена';
-  document.getElementById('t-nm').value='';
+  msg.className='msg ok';msg.textContent='✓ '+nm+' добавлена';
   document.getElementById('t-x').value='';
   document.getElementById('t-y').value='';
   renderTargets();
@@ -590,9 +590,7 @@ function renderTargets(){
       <div class="tn">${t.name}${isSel?' ◀ активная':''}</div>
       <div class="tm">${meta}</div>
       <div class="tc" onclick="event.stopPropagation()">
-        <span class="cbtn" onclick="copyCoord(this,'${t.x}')">📋 X: ${t.x}</span>
-        <span class="cbtn" onclick="copyCoord(this,'${t.y}')">📋 Y: ${t.y}</span>
-        <span class="cbtn" onclick="copyCoord(this,'${t.x} ${t.y}')">📋 X Y</span>
+        <span class="cbtn" onclick="copyFull(this,${t.id})">📋 Скопировать цель</span>
       </div>
       <div class="ta" onclick="event.stopPropagation()">
         <button class="bxs g" onclick="selTarget(${t.id})">Выбрать</button>
@@ -600,6 +598,14 @@ function renderTargets(){
       </div>
     </div>`;
   }).join('');
+}
+
+function copyFull(el, id){
+  const t=S.targets.find(x=>x.id===id);
+  if(!t) return;
+  const h = t.h||0, front = t.front||0, depth = t.depth||0;
+  const text = `${t.name}\nX= ${t.x}\nY= ${t.y}\nH= ${h}\nФронт= ${front}, Глубина= ${depth}`;
+  copyCoord(el, text);
 }
 
 function copyCoord(el, text){
