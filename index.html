@@ -84,6 +84,15 @@ input:focus,select:focus{border-color:var(--accent);background:#fff}
 .ti .cbtn.copied{background:var(--green-bg);color:var(--green)}
 .ti .ta{display:flex;gap:6px;margin-top:7px}
 
+/* OP list */
+.oi{background:var(--surface);border-radius:var(--radius);padding:11px 13px;
+  margin-bottom:7px;box-shadow:0 1px 3px rgba(0,0,0,.06);
+  cursor:pointer;border-left:4px solid transparent}
+.oi.sel{border-left-color:var(--accent);background:var(--accent-bg)}
+.oi .on1{font-size:15px;font-weight:700;margin-bottom:3px}
+.oi .om{font-size:12px;color:var(--text2);display:flex;gap:10px;flex-wrap:wrap}
+.oi .oa{display:flex;gap:6px;margin-top:7px}
+
 /* Shot items */
 .si{background:var(--surface2);border-radius:8px;padding:10px 12px;
   margin-bottom:6px;border-left:3px solid var(--border)}
@@ -116,21 +125,47 @@ input:focus,select:focus{border-color:var(--accent);background:#fff}
   color:var(--text2);font-size:10px;font-weight:600;gap:2px}
 .nb.on{color:var(--accent)}
 .nb svg{width:22px;height:22px}
+
+/* Burger menu */
+.tb.burger{padding:5px 11px;font-size:16px;line-height:1}
+.menu-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:150}
+.menu-overlay.on{display:block}
+.menu-panel{position:fixed;top:0;left:-260px;bottom:0;width:260px;background:var(--surface);
+  z-index:151;transition:left .2s ease;padding:calc(env(safe-area-inset-top) + 16px) 14px 14px;
+  box-shadow:2px 0 10px rgba(0,0,0,.15)}
+.menu-panel.on{left:0}
+.menu-title{font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;
+  letter-spacing:.5px;margin-bottom:10px}
+.menu-item{display:block;width:100%;text-align:left;background:var(--surface2);
+  border:1.5px solid var(--border);border-radius:8px;padding:11px 13px;font-size:14px;
+  font-weight:600;color:var(--text);margin-bottom:8px;cursor:pointer}
+.menu-item:active{opacity:.8}
 </style>
 </head>
 <body>
 
 <div class="hdr">
+  <button class="tb burger" onclick="toggleMenu()">☰</button>
   <h1>🎯 АртКалк</h1>
   <button class="tb on" onclick="nav('op')">ОП</button>
   <button class="tb" onclick="nav('tg')">Цели</button>
   <button class="tb" onclick="nav('fi')">Стрельба</button>
 </div>
 
+<div class="menu-overlay" id="menu-overlay" onclick="toggleMenu()"></div>
+<div class="menu-panel" id="menu-panel">
+  <div class="menu-title">Меню</div>
+  <button class="menu-item" onclick="exportKML();toggleMenu()">📤 Экспорт целей в KML</button>
+  <button class="menu-item" onclick="document.getElementById('kml-file').click()">📥 Импорт целей из KML</button>
+  <input type="file" id="kml-file" accept=".kml" style="display:none" onchange="importKMLFile(this);toggleMenu()">
+</div>
+
 <!-- ═══ ОП ═══ -->
 <div class="page on" id="p-op">
   <div class="card">
-    <div class="ct">Огневая позиция</div>
+    <div class="ct">Добавить огневую позицию</div>
+    <lbl>Позывной ОП</lbl>
+    <input id="op-cs" type="text" placeholder="Береза" autocomplete="off">
     <div class="r2">
       <div><lbl>X огневой</lbl><input id="op-x" type="number" inputmode="numeric" placeholder="5194748"></div>
       <div><lbl>Y огневой</lbl><input id="op-y" type="number" inputmode="numeric" placeholder="5698967"></div>
@@ -144,9 +179,14 @@ input:focus,select:focus{border-color:var(--accent);background:#fff}
   </div>
 
   <div class="card" id="op-res" style="display:none">
-    <div class="ct">Текущая ОП</div>
+    <div class="ct">Выбранная ОП</div>
     <div id="op-res-body"></div>
   </div>
+
+  <div class="sh2">
+    <h2>Огневые позиции <span class="badge" id="op-cnt">0</span></h2>
+  </div>
+  <div id="op-list"><div class="empty">ОП не добавлены</div></div>
 
   <div class="card">
     <div class="ct">Система и заряд</div>
@@ -176,7 +216,18 @@ input:focus,select:focus{border-color:var(--accent);background:#fff}
   <div class="card">
     <div class="ct">Добавить цель</div>
     <lbl>Тип цели</lbl>
-    <input id="t-nm" type="text" placeholder="ПЕХОТА" autocomplete="off" value="ПЕХОТА">
+    <select id="t-nm">
+      <option value="ПЕХОТА">ПЕХОТА</option>
+      <option value="ТАНК">ТАНК</option>
+      <option value="БМП">БМП</option>
+      <option value="БТР">БТР</option>
+      <option value="АРТИЛЛЕРИЯ">АРТИЛЛЕРИЯ</option>
+      <option value="МИНОМЁТ">МИНОМЁТ</option>
+      <option value="НП">НП</option>
+      <option value="ОП">ОП</option>
+      <option value="КОЛОННА">КОЛОННА</option>
+      <option value="УКРЕПЛЕНИЕ">УКРЕПЛЕНИЕ</option>
+    </select>
     <div class="r2">
       <div><lbl>X цели</lbl><input id="t-x" type="number" inputmode="numeric" placeholder="5196064"></div>
       <div><lbl>Y цели</lbl><input id="t-y" type="number" inputmode="numeric" placeholder="5695679"></div>
@@ -327,9 +378,18 @@ const TBL = {
 // ══════════════════════════════════════════════════
 // STATE
 // ══════════════════════════════════════════════════
-let S = {op:null, charge:'4', targets:[], active:null, tgNum:0};
+let S = {ops:[], activeOpId:null, charge:'4', targets:[], active:null, tgNum:0};
 try{ const s=localStorage.getItem('ac3'); if(s) S=JSON.parse(s); }catch(e){}
+if(!S.ops) S.ops=[];
+if(S.op){ // миграция со старой версии (одна ОП без позывного)
+  const id=Date.now();
+  S.ops.push({id, cs:'ОП-1', x:S.op.x, y:S.op.y, otn:S.op.otn, on:S.op.on});
+  S.activeOpId=id;
+  delete S.op;
+}
+if(S.activeOpId===undefined) S.activeOpId=null;
 function save(){ try{localStorage.setItem('ac3',JSON.stringify(S));}catch(e){} }
+function getOP(){ return S.ops.find(o=>o.id===S.activeOpId)||null; }
 
 // ══════════════════════════════════════════════════
 // УТИЛИТЫ
@@ -381,6 +441,110 @@ function dirDU(dx, dy){
 
 function duToRad(thou){ return thou / 6000 * 2 * Math.PI; }
 
+// ══════════════════════════════════════════════════
+// ГЕОДЕЗИЯ: WGS84 (широта/долгота) ↔ СК-42 Гаусс-Крюгер (X/Y)
+// ══════════════════════════════════════════════════
+const WGS84_A=6378137.0, WGS84_F=1/298.257223563;
+const SK42_A=6378245.0,  SK42_F=1/298.3;
+// Параметры сдвига датума SK-42 (Пулково-42) → WGS84, метры
+const D_DX=23.92, D_DY=-141.27, D_DZ=-80.9;
+
+function geoToECEF(latDeg,lonDeg,h,a,f){
+  const e2=f*(2-f);
+  const lat=latDeg*Math.PI/180, lon=lonDeg*Math.PI/180;
+  const sinB=Math.sin(lat), cosB=Math.cos(lat);
+  const N=a/Math.sqrt(1-e2*sinB*sinB);
+  return [
+    (N+h)*cosB*Math.cos(lon),
+    (N+h)*cosB*Math.sin(lon),
+    (N*(1-e2)+h)*sinB
+  ];
+}
+function ecefToGeo(x,y,z,a,f){
+  const e2=f*(2-f);
+  const lon=Math.atan2(y,x);
+  const p=Math.sqrt(x*x+y*y);
+  let lat=Math.atan2(z, p*(1-e2));
+  for(let i=0;i<6;i++){
+    const N=a/Math.sqrt(1-e2*Math.sin(lat)*Math.sin(lat));
+    const h=p/Math.cos(lat)-N;
+    lat=Math.atan2(z, p*(1-e2*N/(N+h)));
+  }
+  return [lat*180/Math.PI, lon*180/Math.PI];
+}
+function wgs84ToSK42ll(latDeg,lonDeg){
+  const [x,y,z]=geoToECEF(latDeg,lonDeg,0,WGS84_A,WGS84_F);
+  const [lat2,lon2]=ecefToGeo(x-D_DX,y-D_DY,z-D_DZ,SK42_A,SK42_F);
+  return {lat:lat2,lon:lon2};
+}
+function sk42ToWgs84ll(latDeg,lonDeg){
+  const [x,y,z]=geoToECEF(latDeg,lonDeg,0,SK42_A,SK42_F);
+  const [lat2,lon2]=ecefToGeo(x+D_DX,y+D_DY,z+D_DZ,WGS84_A,WGS84_F);
+  return {lat:lat2,lon:lon2};
+}
+
+// Гаусс-Крюгер (эллипсоид Красовского), формулы Снайдера (Transverse Mercator, k0=1)
+function gkE2(){ const f=SK42_F; return f*(2-f); }
+function latlonToGK(latDeg,lonDeg){
+  const a=SK42_A, e2=gkE2();
+  const zone=Math.floor(lonDeg/6)+1;
+  const lon0=zone*6-3;
+  const lat=latDeg*Math.PI/180;
+  const dLon=(lonDeg-lon0)*Math.PI/180;
+  const ep2=e2/(1-e2);
+  const sinB=Math.sin(lat), cosB=Math.cos(lat), tanB=Math.tan(lat);
+  const N=a/Math.sqrt(1-e2*sinB*sinB);
+  const T=tanB*tanB, C=ep2*cosB*cosB, A=dLon*cosB;
+  const M=a*((1-e2/4-3*e2*e2/64-5*e2*e2*e2/256)*lat
+    -(3*e2/8+3*e2*e2/32+45*e2*e2*e2/1024)*Math.sin(2*lat)
+    +(15*e2*e2/256+45*e2*e2*e2/1024)*Math.sin(4*lat)
+    -(35*e2*e2*e2/3072)*Math.sin(6*lat));
+  const easting=500000+N*(A+(1-T+C)*Math.pow(A,3)/6
+    +(5-18*T+T*T+72*C-58*ep2)*Math.pow(A,5)/120);
+  const northing=M+N*tanB*(A*A/2
+    +(5-T+9*C+4*C*C)*Math.pow(A,4)/24
+    +(61-58*T+T*T+600*C-330*ep2)*Math.pow(A,6)/720);
+  return {x:northing, y:zone*1000000+easting};
+}
+function gkToLatlon(xNorthing,yFull){
+  const a=SK42_A, e2=gkE2();
+  const zone=Math.floor(yFull/1000000);
+  const easting=yFull-zone*1000000;
+  const lon0=zone*6-3;
+  const ep2=e2/(1-e2);
+  const e1=(1-Math.sqrt(1-e2))/(1+Math.sqrt(1-e2));
+  const mu=xNorthing/(a*(1-e2/4-3*e2*e2/64-5*e2*e2*e2/256));
+  const phi1=mu
+    +(3*e1/2-27*Math.pow(e1,3)/32)*Math.sin(2*mu)
+    +(21*e1*e1/16-55*Math.pow(e1,4)/32)*Math.sin(4*mu)
+    +(151*Math.pow(e1,3)/96)*Math.sin(6*mu)
+    +(1097*Math.pow(e1,4)/512)*Math.sin(8*mu);
+  const sinP=Math.sin(phi1), cosP=Math.cos(phi1), tanP=Math.tan(phi1);
+  const C1=ep2*cosP*cosP, T1=tanP*tanP;
+  const N1=a/Math.sqrt(1-e2*sinP*sinP);
+  const R1=a*(1-e2)/Math.pow(1-e2*sinP*sinP,1.5);
+  const D=(easting-500000)/N1;
+  const lat=phi1-(N1*tanP/R1)*(D*D/2
+    -(5+3*T1+10*C1-4*C1*C1-9*ep2)*Math.pow(D,4)/24
+    +(61+90*T1+298*C1+45*T1*T1-252*ep2-3*C1*C1)*Math.pow(D,6)/720);
+  const lon=lon0*Math.PI/180+(D-(1+2*T1+C1)*Math.pow(D,3)/6
+    +(5-2*C1+28*T1-3*C1*C1+8*ep2+24*T1*T1)*Math.pow(D,5)/120)/cosP;
+  return {lat:lat*180/Math.PI, lon:lon*180/Math.PI};
+}
+
+function wgs84ToXY(latDeg,lonDeg){
+  const sk=wgs84ToSK42ll(latDeg,lonDeg);
+  return latlonToGK(sk.lat, sk.lon);
+}
+function xyToWgs84(x,y){
+  const ll=gkToLatlon(x,y);
+  return sk42ToWgs84ll(ll.lat, ll.lon);
+}
+
+function escapeXML(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
 // Линейная интерполяция прицела по дальности
 function interp(distM, chKey){
   const t = TBL[chKey];
@@ -426,8 +590,9 @@ function calcEffective(t, c){
 
 // Расчёт установок от ОП до цели
 function calcTarget(t){
-  if(!S.op) return null;
-  const {x:ox,y:oy,otn,on} = S.op;
+  const op=getOP();
+  if(!op) return null;
+  const {x:ox,y:oy,otn,on} = op;
   const dx = t.x - ox;  // ΔX (север+)
   const dy = t.y - oy;  // ΔY (восток+)
   const dist = Math.sqrt(dx*dx+dy*dy);
@@ -475,6 +640,11 @@ function fmtAxis(v, pos, neg){
 // ══════════════════════════════════════════════════
 // НАВИГАЦИЯ
 // ══════════════════════════════════════════════════
+function toggleMenu(){
+  document.getElementById('menu-overlay').classList.toggle('on');
+  document.getElementById('menu-panel').classList.toggle('on');
+}
+
 function nav(p){
   ['op','tg','fi'].forEach(x=>{
     document.getElementById('p-'+x).classList.toggle('on', x===p);
@@ -491,33 +661,83 @@ function nav(p){
 // ОП
 // ══════════════════════════════════════════════════
 function saveOP(){
+  const cs  = document.getElementById('op-cs').value.trim();
   const x   = parseFloat(document.getElementById('op-x').value);
   const y   = parseFloat(document.getElementById('op-y').value);
   const otn = document.getElementById('op-otn').value.trim();
   const on  = document.getElementById('op-on').value.trim();
   const msg = document.getElementById('op-msg');
 
+  if(!cs){ msg.className='msg err'; msg.textContent='Введите позывной ОП'; return; }
   if(isNaN(x)||isNaN(y)||!otn||!on){ msg.className='msg err'; msg.textContent='Заполните все поля'; return; }
   if(parseDU(otn)===null){ msg.className='msg err'; msg.textContent='Неверный формат ОТН (пример: 35-52)'; return; }
   if(parseDU(on)===null){  msg.className='msg err'; msg.textContent='Неверный формат ОН (пример: 51-00)'; return; }
 
-  S.op = {x,y,otn,on};
+  const id=Date.now();
+  S.ops.push({id, cs, x, y, otn, on});
+  S.activeOpId=id;
   save();
-  msg.className='msg ok'; msg.textContent='✓ ОП сохранена';
+  msg.className='msg ok'; msg.textContent='✓ ОП «'+cs+'» сохранена и выбрана';
+  document.getElementById('op-cs').value='';
+  document.getElementById('op-x').value='';
+  document.getElementById('op-y').value='';
+  document.getElementById('op-otn').value='';
+  document.getElementById('op-on').value='';
   renderOPResult();
+  renderOPList();
+  renderTargets();
+  renderFire();
+}
+
+function selOP(id){
+  S.activeOpId=id;
+  save();
+  renderOPResult();
+  renderOPList();
+  renderTargets();
+  renderFire();
+}
+
+function delOP(id){
+  if(!confirm('Удалить эту ОП?')) return;
+  S.ops=S.ops.filter(o=>o.id!==id);
+  if(S.activeOpId===id) S.activeOpId=null;
+  save();
+  renderOPResult();
+  renderOPList();
+  renderTargets();
   renderFire();
 }
 
 function renderOPResult(){
   const el = document.getElementById('op-res');
-  if(!S.op){ el.style.display='none'; return; }
+  const op = getOP();
+  if(!op){ el.style.display='none'; return; }
   el.style.display='block';
-  const {x,y,otn,on}=S.op;
+  const {cs,x,y,otn,on}=op;
   document.getElementById('op-res-body').innerHTML=`
+    <div class="dr"><span class="k">Позывной</span><span class="v">${cs}</span></div>
     <div class="dr"><span class="k">X / Y</span><span class="v">${Math.round(x).toLocaleString()} / ${Math.round(y).toLocaleString()}</span></div>
     <div class="dr"><span class="k">Угломер ОТН</span><span class="v">${otn} (${fmtDU(parseDU(otn))} д.у.)</span></div>
     <div class="dr"><span class="k">Осн. направление</span><span class="v">${on} (${fmtDU(parseDU(on))} д.у.)</span></div>
   `;
+}
+
+function renderOPList(){
+  document.getElementById('op-cnt').textContent=S.ops.length;
+  const el=document.getElementById('op-list');
+  if(!S.ops.length){ el.innerHTML='<div class="empty">ОП не добавлены</div>'; return; }
+  el.innerHTML=[...S.ops].reverse().map(o=>{
+    const isSel=o.id===S.activeOpId;
+    return `<div class="oi ${isSel?'sel':''}" onclick="selOP(${o.id})">
+      <div class="on1">${o.cs}${isSel?' ◀ активная':''}</div>
+      <div class="om"><span>X:${o.x}</span><span>Y:${o.y}</span><span>ОТН:${o.otn}</span><span>ОН:${o.on}</span></div>
+      <div class="oa" onclick="event.stopPropagation()">
+        <button class="bxs g" onclick="selOP(${o.id})">Выбрать</button>
+        <button class="bxs d" onclick="delOP(${o.id})">Удалить</button>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 function saveCharge(){
@@ -529,13 +749,8 @@ function saveCharge(){
 }
 
 // INIT OP
-if(S.op){
-  document.getElementById('op-x').value=S.op.x;
-  document.getElementById('op-y').value=S.op.y;
-  document.getElementById('op-otn').value=S.op.otn;
-  document.getElementById('op-on').value=S.op.on;
-  renderOPResult();
-}
+renderOPResult();
+renderOPList();
 document.getElementById('charge').value=S.charge||'4';
 
 // ══════════════════════════════════════════════════
@@ -575,12 +790,84 @@ function clearTargets(){
   S.targets=[]; S.active=null; save(); renderTargets();
 }
 
+function exportKML(){
+  if(!S.targets.length){ alert('Нет целей для экспорта'); return; }
+  const placemarks = S.targets.map(t=>{
+    const ll = xyToWgs84(t.x, t.y);
+    return `      <Placemark>
+        <name>${escapeXML(t.name)}</name>
+        <visibility>1</visibility>
+        <description></description>
+        <Point>
+          <coordinates>${ll.lon.toFixed(9)},${ll.lat.toFixed(9)},0.0</coordinates>
+        </Point>
+      </Placemark>`;
+  }).join('\n');
+  const kml = `<?xml version='1.0' encoding='UTF-8' ?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>Цели из АртКалк</name>
+    <description>Цели, экспортированные из АртКалк</description>
+    <Folder>
+      <name>Цели</name>
+${placemarks}
+    </Folder>
+  </Document>
+</kml>`;
+  const blob=new Blob([kml],{type:'application/vnd.google-earth.kml+xml'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  const ts=new Date().toISOString().replace(/[:T]/g,'-').slice(0,19);
+  a.href=url; a.download=`artcalc-targets-${ts}.kml`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function importKMLFile(input){
+  const file=input.files[0];
+  if(!file) return;
+  const msg=document.getElementById('t-msg');
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const xml=new DOMParser().parseFromString(e.target.result,'text/xml');
+      if(xml.getElementsByTagName('parsererror').length){ throw new Error('файл повреждён'); }
+      const placemarks=xml.getElementsByTagName('Placemark');
+      let added=0;
+      for(let i=0;i<placemarks.length;i++){
+        const pm=placemarks[i];
+        const coordEl=pm.getElementsByTagName('coordinates')[0];
+        if(!coordEl) continue;
+        const parts=coordEl.textContent.trim().split(',');
+        const lon=parseFloat(parts[0]), lat=parseFloat(parts[1]);
+        if(isNaN(lon)||isNaN(lat)) continue;
+        const nameEl=pm.getElementsByTagName('name')[0];
+        const nm=nameEl?nameEl.textContent.trim():String(added+1);
+        const xy=wgs84ToXY(lat,lon);
+        S.targets.push({
+          id:Date.now()+i,
+          name:`Цель ${nm} ПЕХОТА`,
+          x:Math.round(xy.x), y:Math.round(xy.y),
+          shots:[], corrUgl:0, corrRange:0
+        });
+        added++;
+      }
+      save(); renderTargets();
+      msg.className='msg ok'; msg.textContent=`✓ Импортировано целей: ${added}`;
+    }catch(err){
+      msg.className='msg err'; msg.textContent='Ошибка чтения KML: '+err.message;
+    }
+    input.value='';
+  };
+  reader.readAsText(file);
+}
+
 function renderTargets(){
   document.getElementById('t-cnt').textContent=S.targets.length;
   const el=document.getElementById('t-list');
   if(!S.targets.length){el.innerHTML='<div class="empty">Цели не добавлены</div>';return;}
   el.innerHTML=[...S.targets].reverse().map(t=>{
-    const c=S.op?calcTarget(t):null;
+    const c=getOP()?calcTarget(t):null;
     const eff=c?calcEffective(t,c):null;
     const isSel=t.id===S.active;
     const meta=c
@@ -646,7 +933,7 @@ function renderFire(){
   document.getElementById('sh-title').textContent=`Разрыв #${t.shots.length+1} — от цели`;
   document.getElementById('fi-charge').textContent=TBL[S.charge].name;
 
-  const c=S.op?calcTarget(t):null;
+  const c=getOP()?calcTarget(t):null;
   const eff=c?calcEffective(t,c):null;
   if(c && eff){
     document.getElementById('fi-dist').textContent=Math.round(c.dist)+' м';
@@ -685,7 +972,7 @@ function addShot(){
   err.textContent='';
 
   if(isNaN(sfM)||isNaN(dvM)){err.textContent='Заполните оба поля';return;}
-  if(!S.op){err.textContent='Сначала сохраните ОП';return;}
+  if(!getOP()){err.textContent='Сначала выберите ОП';return;}
 
   // Направление стрельбы = дир.угол на цель (уже посчитан)
   const c=calcTarget(t);
