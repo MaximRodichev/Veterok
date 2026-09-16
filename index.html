@@ -269,6 +269,36 @@ input:focus,select:focus{border-color:var(--accent);background:#fff}
       <div class="dr" id="fi-corr" style="display:none"><span class="k">Поправка (от последнего разрыва)</span><span class="v"></span></div>
     </div>
 
+    <div class="card" id="corr-card" style="display:none">
+      <div class="ct">Корректура для передачи</div>
+      <div class="r2">
+        <button class="btn bg" style="margin-top:0" onclick="copyCorr(this)">📋 Скопировать корректуру</button>
+        <button class="btn bg" style="margin-top:0" onclick="shareCorr()">📤 Передать</button>
+      </div>
+    </div>
+
+    <!-- Наблюдение с коптера -->
+    <div class="card">
+      <div class="ct">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:700">
+          <input type="checkbox" id="obs-en" onchange="toggleObs()" style="width:18px;height:18px">
+          🚁 Наблюдение и корректировка с коптера
+        </label>
+      </div>
+      <div id="obs-fields" style="display:none">
+        <div class="r2">
+          <div><lbl>Широта коптера, °</lbl><input id="obs-lat" type="number" step="any" placeholder="46.87178" onchange="saveObsFields()"></div>
+          <div><lbl>Долгота коптера, °</lbl><input id="obs-lon" type="number" step="any" placeholder="29.56584" onchange="saveObsFields()"></div>
+        </div>
+        <lbl>Истинный азимут коптер → цель, °</lbl>
+        <div class="r2">
+          <input id="obs-az" type="number" step="any" placeholder="132.4" onchange="saveObsFields()">
+          <button class="btn bg" style="margin-top:0" onclick="calcObsAz()">📐 Вычислить по координатам</button>
+        </div>
+        <p class="msg" id="obs-msg"></p>
+      </div>
+    </div>
+
     <!-- Ввод разрыва -->
     <div class="card">
       <div class="ct" id="sh-title">Разрыв #1 — от цели</div>
@@ -670,6 +700,11 @@ function saveOP(){
 
   if(!cs){ msg.className='msg err'; msg.textContent='Введите позывной ОП'; return; }
   if(isNaN(x)||isNaN(y)||!otn||!on){ msg.className='msg err'; msg.textContent='Заполните все поля'; return; }
+  if(Math.abs(x)<1000000||Math.abs(x)>9999999||Math.abs(y)<1000000||Math.abs(y)>9999999){
+    msg.className='msg err';
+    msg.textContent='X и Y должны быть 7-значными координатами СК-42 (пример: X=5194748, Y=5698967). Проверьте ввод.';
+    return;
+  }
   if(parseDU(otn)===null){ msg.className='msg err'; msg.textContent='Неверный формат ОТН (пример: 35-52)'; return; }
   if(parseDU(on)===null){  msg.className='msg err'; msg.textContent='Неверный формат ОН (пример: 51-00)'; return; }
 
@@ -762,9 +797,14 @@ function addTarget(){
   const y =parseFloat(document.getElementById('t-y').value);
   const msg=document.getElementById('t-msg');
   if(isNaN(x)||isNaN(y)){msg.className='msg err';msg.textContent='Введите координаты X и Y';return;}
+  if(Math.abs(x)<1000000||Math.abs(x)>9999999||Math.abs(y)<1000000||Math.abs(y)>9999999){
+    msg.className='msg err';
+    msg.textContent='X и Y должны быть 7-значными координатами СК-42 (пример: X=5196064, Y=5695679). Проверьте ввод.';
+    return;
+  }
   S.tgNum = (S.tgNum||0) + 1;
   const nm = `Цель ${S.tgNum} ${type}`;
-  S.targets.push({id:Date.now(),num:S.tgNum,name:nm,x,y,shots:[],corrUgl:0,corrRange:0});
+  S.targets.push({id:Date.now(),num:S.tgNum,name:nm,type,x,y,shots:[],corrUgl:0,corrRange:0});
   save();
   msg.className='msg ok';msg.textContent='✓ '+nm+' добавлена';
   document.getElementById('t-x').value='';
@@ -846,6 +886,7 @@ function importKMLFile(input){
         const xy=wgs84ToXY(lat,lon);
         S.targets.push({
           id:Date.now()+i,
+          num:nm, type:'ПЕХОТА',
           name:`Цель ${nm} ПЕХОТА`,
           x:Math.round(xy.x), y:Math.round(xy.y),
           shots:[], corrUgl:0, corrRange:0
@@ -870,14 +911,16 @@ function renderTargets(){
     const c=getOP()?calcTarget(t):null;
     const eff=c?calcEffective(t,c):null;
     const isSel=t.id===S.active;
-    const meta=c
-      ?`<span>Д: ${Math.round(c.dist)} м</span><span class="ugl">Угломер: ${fmtDU(eff.uglDU)}</span><span>Прицел: ${eff.fire?eff.fire.pricel+' дел':'вне диап.'}</span><span>Разрывов: ${t.shots.length}</span>`
-      :`<span>Разрывов: ${t.shots.length}</span>`;
+    const meta = !c ? `<span>Разрывов: ${t.shots.length}</span>`
+      : c.dist > 50000
+        ? `<span style="color:var(--danger,#c0392b);font-weight:700">⚠ Д: ${Math.round(c.dist)} м — проверьте координаты ОП!</span>`
+        : `<span>Д: ${Math.round(c.dist)} м</span><span class="ugl">Угломер: ${fmtDU(eff.uglDU)}</span><span>Прицел: ${eff.fire?eff.fire.pricel+' дел':'вне диап.'}</span><span>Разрывов: ${t.shots.length}</span>`;
     return `<div class="ti ${isSel?'sel':''}" onclick="selTarget(${t.id})">
       <div class="tn">${t.name}${isSel?' ◀ активная':''}</div>
       <div class="tm">${meta}</div>
       <div class="tc" onclick="event.stopPropagation()">
         <span class="cbtn" onclick="copyFull(this,${t.id})">📋 Скопировать цель</span>
+        <span class="cbtn" onclick="shareFull(${t.id})">📤 Передать</span>
       </div>
       <div class="ta" onclick="event.stopPropagation()">
         <button class="bxs g" onclick="selTarget(${t.id})">Выбрать</button>
@@ -887,12 +930,26 @@ function renderTargets(){
   }).join('');
 }
 
+function targetText(t){
+  const h = t.h||0, front = t.front||0, depth = t.depth||0;
+  return `${t.name}\nX= ${t.x}\nY= ${t.y}\nH= ${h}\nФронт= ${front}, Глубина= ${depth}`;
+}
+
 function copyFull(el, id){
   const t=S.targets.find(x=>x.id===id);
   if(!t) return;
-  const h = t.h||0, front = t.front||0, depth = t.depth||0;
-  const text = `${t.name}\nX= ${t.x}\nY= ${t.y}\nH= ${h}\nФронт= ${front}, Глубина= ${depth}`;
-  copyCoord(el, text);
+  copyCoord(el, targetText(t));
+}
+
+function shareFull(id){
+  const t=S.targets.find(x=>x.id===id);
+  if(!t) return;
+  const text = targetText(t);
+  if(navigator.share){
+    navigator.share({text}).catch(()=>{});
+  } else {
+    fallbackCopy(text, ()=>{ alert('Скопировано в буфер обмена (отправка через приложения не поддерживается в этом браузере)'); });
+  }
 }
 
 function copyCoord(el, text){
@@ -960,7 +1017,38 @@ function renderFire(){
     ['fi-dist','fi-dir','fi-dov','fi-uglomer','fi-pricel','fi-time'].forEach(id=>document.getElementById(id).textContent='—');
     document.getElementById('fi-corr').style.display='none';
   }
+  document.getElementById('corr-card').style.display = (t.shots.length>0) ? 'block' : 'none';
   renderShots(t);
+}
+
+function toggleObs(){
+  S.obs = S.obs || {};
+  S.obs.enabled = document.getElementById('obs-en').checked;
+  document.getElementById('obs-fields').style.display = S.obs.enabled ? 'block' : 'none';
+  save();
+}
+
+function saveObsFields(){
+  S.obs = S.obs || {};
+  S.obs.lat = document.getElementById('obs-lat').value;
+  S.obs.lon = document.getElementById('obs-lon').value;
+  S.obs.az  = document.getElementById('obs-az').value;
+  save();
+}
+
+function calcObsAz(){
+  const t=getAT();
+  const lat=parseFloat(document.getElementById('obs-lat').value);
+  const lon=parseFloat(document.getElementById('obs-lon').value);
+  const msg=document.getElementById('obs-msg');
+  if(!t){ msg.className='msg err'; msg.textContent='Нет выбранной цели'; return; }
+  if(isNaN(lat)||isNaN(lon)){ msg.className='msg err'; msg.textContent='Введите широту и долготу коптера'; return; }
+  const xy=wgs84ToXY(lat,lon);
+  const dx=t.x-xy.x, dy=t.y-xy.y;
+  const azDeg = dirDU(dx,dy)/6000*360;
+  document.getElementById('obs-az').value = azDeg.toFixed(1);
+  msg.className='msg ok'; msg.textContent=`✓ Азимут коптер → цель: ${azDeg.toFixed(1)}°`;
+  saveObsFields();
 }
 
 function addShot(){
@@ -974,26 +1062,39 @@ function addShot(){
   if(isNaN(sfM)||isNaN(dvM)){err.textContent='Заполните оба поля';return;}
   if(!getOP()){err.textContent='Сначала выберите ОП';return;}
 
-  // Направление стрельбы = дир.угол на цель (уже посчитан)
+  // Направление от ОП на цель (нужно всегда — оно задаёт базис для орудийных поправок)
   const c=calcTarget(t);
   if(!c){err.textContent='Ошибка расчёта цели';return;}
-
-  // Эффективные (пристрелянные) установки — с учётом поправок от прошлых разрывов
   const eff=calcEffective(t,c);
 
-  // Смещение разрыва от цели — вдоль направления на цель
-  const dev=calcDeviation(c.dDU, sfM, dvM);
+  // Базис наблюдения: по умолчанию — линия ОП→цель; если включён коптер — его истинный азимут на цель
+  let basisDU = c.dDU;
+  let basisSrc = 'ОП';
+  if(S.obs && S.obs.enabled){
+    const az=parseFloat(document.getElementById('obs-az').value);
+    if(isNaN(az)){ err.textContent='Введите истинный азимут коптер → цель (или вычислите по координатам)'; return; }
+    basisDU = normDU(Math.round(az/360*6000));
+    basisSrc = 'коптер';
+  }
+
+  // Абсолютное смещение разрыва на местности (север/восток) — вдоль базиса наблюдения
+  const dev = calcDeviation(basisDU, sfM, dvM);
+
+  // Проекция этого смещения на линию ОП→цель — именно она нужна для поправок орудия,
+  // т.к. орудие стреляет не по линии наблюдателя, а по своей собственной
+  const dirRadGun = duToRad(c.dDU);
+  const alongGun =  dev.north*Math.cos(dirRadGun) + dev.east*Math.sin(dirRadGun);
+  const perpGun  = -dev.north*Math.sin(dirRadGun) + dev.east*Math.cos(dirRadGun);
 
   // Угломер/прицел, реально применённые для этого разрыва
   const uglShot=eff.uglDU;
   const pricelShot=eff.fire?eff.fire.pricel:null;
 
-  t.shots.push({num:t.shots.length+1, sfM, dvM, dev, uglShot, pricelShot, dirDU:c.dDU});
+  t.shots.push({num:t.shots.length+1, sfM, dvM, dev, uglShot, pricelShot, dirDU:c.dDU, basisDU, basisSrc});
 
-  // Поправка всегда считается от цели (по «сырым» данным), а не наращивается
-  // поверх предыдущей поправки — самый свежий разрыв полностью её пересчитывает
-  t.corrRange = -sfM;
-  const uglMiss = Math.round(1000*dvM/c.dist);
+  // Поправка орудия всегда считается заново от цели (не накапливается поверх предыдущей)
+  t.corrRange = -alongGun;
+  const uglMiss = Math.round(1000*perpGun/c.dist);
   t.corrUgl = -uglMiss;
 
   save();
@@ -1001,6 +1102,85 @@ function addShot(){
   document.getElementById('sh-sf').value='';
   document.getElementById('sh-dv').value='';
   renderFire();
+}
+
+// Метка цели в формате "Ц-14 "ПЕХОТА""
+function targetLabel(t){
+  let num=t.num, type=t.type;
+  if(num===undefined || type===undefined){
+    const m=/^Цель\s+(\S+)\s+([\s\S]+)$/.exec(t.name||'');
+    if(m){ num = num!==undefined?num:m[1]; type = type!==undefined?type:m[2]; }
+  }
+  if(num===undefined) num='?';
+  if(type===undefined) type=t.name||'';
+  return `Ц-${num} "${type}"`;
+}
+
+function pad2(n){ return String(n).padStart(2,'0'); }
+
+// Формирует текст корректуры по последнему зафиксированному разрыву
+function buildCorrText(t){
+  const op=getOP();
+  if(!op) return null;
+  const c=calcTarget(t);
+  if(!c) return null;
+  const eff=calcEffective(t,c);
+  const last=t.shots[t.shots.length-1];
+  if(!last) return null;
+
+  const n=t.shots.length;
+
+  const ns = last.dev.north>=0 ? `С:${Math.round(last.dev.north)}` : `Ю:${Math.round(Math.abs(last.dev.north))}`;
+  const ew = last.dev.east>=0  ? `В:${Math.round(last.dev.east)}`  : `З:${Math.round(Math.abs(last.dev.east))}`;
+
+  const pricelNow = eff.fire?eff.fire.pricel:null;
+  const pricelDelta = (pricelNow!==null && last.pricelShot!==null) ? (pricelNow-last.pricelShot) : 0;
+  const pricelStr = pricelNow!==null
+    ? `${pricelNow} (${pricelDelta>=0?'+':''}${pricelDelta})`
+    : 'вне диап.';
+
+  let uglDelta = eff.uglDU - last.uglShot;
+  while(uglDelta >  3000) uglDelta -= 6000;
+  while(uglDelta < -3000) uglDelta += 6000;
+  const dovStr = `${fmtDU(normDU(eff.dovDU))} (${uglDelta>=0?'+':'-'}${fmtDU(Math.abs(uglDelta))})`;
+
+  const now=new Date();
+  const timeStr=`${pad2(now.getDate())}/${pad2(now.getMonth()+1)}/${now.getFullYear()} ${pad2(now.getHours())}:${pad2(now.getMinutes())}:${pad2(now.getSeconds())}`;
+
+  const degStr=(normDU(c.dDU)/6000*360).toFixed(2);
+
+  return `Корректура № ${n} (из ${n})
+
+Огневая позиция: ${op.cs}
+2Б11 | ОФ-843Б | М-12 | ${TBL[S.charge].name} | Н
+Цель: ${targetLabel(t)}
+
+Отклонение по с/с, м: ${ns}, ${ew}
+Прицел, дел: ${pricelStr}
+Доворот, д.у: ${dovStr}
+Угломер ОТН, д.у: ${op.otn}
+Дир.угол исчисл., тыс (град): ${fmtDU(normDU(c.dDU))} (${degStr}°)
+Время, д/м/г ч:м:с: ${timeStr}`;
+}
+
+function copyCorr(el){
+  const t=getAT();
+  if(!t) return;
+  const text=buildCorrText(t);
+  if(!text){ alert('Сначала зафиксируйте хотя бы один разрыв'); return; }
+  copyCoord(el, text);
+}
+
+function shareCorr(){
+  const t=getAT();
+  if(!t) return;
+  const text=buildCorrText(t);
+  if(!text){ alert('Сначала зафиксируйте хотя бы один разрыв'); return; }
+  if(navigator.share){
+    navigator.share({text}).catch(()=>{});
+  } else {
+    fallbackCopy(text, ()=>{ alert('Скопировано в буфер обмена (отправка через приложения не поддерживается в этом браузере)'); });
+  }
 }
 
 function clearShots(){
@@ -1022,8 +1202,11 @@ function renderShots(t){
 
   el.innerHTML=[...t.shots].reverse().map(s=>{
     const ugStr=s.uglShot!==undefined?fmtDU(s.uglShot):'—';
+    const basisLabel = s.basisSrc==='коптер'
+      ? `🚁 от коптера (азимут ${(s.basisDU/6000*360).toFixed(1)}°)`
+      : '📍 от ОП';
     return `<div class="si ${s.num===1?'f':''}">
-      <div class="sn">Разрыв #${s.num}</div>
+      <div class="sn">Разрыв #${s.num} <span style="font-weight:400;font-size:12px;color:var(--text2)">${basisLabel}</span></div>
       <div class="sr"><span class="k">Недолёт/Перелёт</span><span class="v">${s.sfM>0?'+':''}${s.sfM} м</span></div>
       <div class="sr"><span class="k">Право/Лево</span><span class="v">${s.dvM>0?'+':''}${s.dvM} м</span></div>
       <div class="sr"><span class="k">Угломер наводчика</span><span class="v" style="color:var(--accent);font-size:16px">${ugStr} д.у.</span></div>
@@ -1043,6 +1226,13 @@ function renderShots(t){
 }
 
 // INIT
+if(S.obs){
+  document.getElementById('obs-en').checked = !!S.obs.enabled;
+  document.getElementById('obs-fields').style.display = S.obs.enabled ? 'block' : 'none';
+  if(S.obs.lat) document.getElementById('obs-lat').value = S.obs.lat;
+  if(S.obs.lon) document.getElementById('obs-lon').value = S.obs.lon;
+  if(S.obs.az)  document.getElementById('obs-az').value  = S.obs.az;
+}
 renderTargets();
 renderFire();
 
