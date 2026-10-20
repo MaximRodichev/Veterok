@@ -140,6 +140,25 @@ input:focus,select:focus{border-color:var(--accent);background:#fff}
   border:1.5px solid var(--border);border-radius:8px;padding:11px 13px;font-size:14px;
   font-weight:600;color:var(--text);margin-bottom:8px;cursor:pointer}
 .menu-item:active{opacity:.8}
+.sh-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px;margin-bottom:8px}
+.sh-card.last{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.sh-h{display:flex;align-items:center;gap:6px;margin-bottom:8px;flex-wrap:wrap}
+.sh-n{background:var(--text3);color:#fff;border-radius:6px;padding:2px 8px;font-size:12px;font-weight:800}
+.sh-card.last .sh-n{background:var(--accent)}
+.sh-chip{background:var(--surface2);border-radius:6px;padding:3px 8px;font-size:12px;font-weight:600}
+.sh-g{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.sh-t{background:var(--accent-bg);border-radius:8px;padding:6px 4px;text-align:center}
+.sh-t .l{font-size:10px;color:var(--text2)}
+.sh-t .v{font-size:17px;font-weight:800;color:var(--accent)}
+.sh-t .s{font-size:10px;color:var(--text2)}
+.sh-f{margin-top:7px;font-size:11px;color:var(--text2)}
+.mdl{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;align-items:center;justify-content:center;padding:20px}
+.mdl.on{display:flex}
+.mdl-box{background:var(--surface);border-radius:12px;padding:18px;width:100%;max-width:340px;box-shadow:0 4px 20px rgba(0,0,0,.25)}
+.mdl-box p{font-size:15px;font-weight:600;margin-bottom:14px}
+.mdl-box .r2 .btn{margin-top:0}
+.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#222;color:#fff;border-radius:8px;padding:9px 14px;font-size:13px;z-index:310;max-width:90%;display:none;text-align:center}
+.toast.on{display:block}
 </style>
 </head>
 <body>
@@ -228,9 +247,18 @@ input:focus,select:focus{border-color:var(--accent);background:#fff}
       <option value="КОЛОННА">КОЛОННА</option>
       <option value="УКРЕПЛЕНИЕ">УКРЕПЛЕНИЕ</option>
     </select>
-    <div class="r2">
+    <lbl>Как задать цель</lbl>
+    <select id="t-mode" onchange="setTgMode()">
+      <option value="xy">По координатам X и Y</option>
+      <option value="polar">От ОП: дир. угол и дальность</option>
+    </select>
+    <div class="r2" id="t-xy">
       <div><lbl>X цели</lbl><input id="t-x" type="number" inputmode="numeric" placeholder="5196064"></div>
       <div><lbl>Y цели</lbl><input id="t-y" type="number" inputmode="numeric" placeholder="5695679"></div>
+    </div>
+    <div class="r2" id="t-polar" style="display:none">
+      <div><lbl>Дир. угол от ОП</lbl><input id="t-du" type="text" inputmode="numeric" placeholder="40-16"></div>
+      <div><lbl>Дальность, м</lbl><input id="t-dist" type="number" inputmode="numeric" placeholder="2600"></div>
     </div>
     <button class="btn bp" onclick="addTarget()">Добавить цель</button>
     <p class="msg" id="t-msg"></p>
@@ -266,7 +294,7 @@ input:focus,select:focus{border-color:var(--accent);background:#fff}
       <div class="dr"><span class="k">Дир. угол топо</span><span class="v" id="fi-dir">—</span></div>
       <div class="dr"><span class="k">Время полёта</span><span class="v" id="fi-time">—</span></div>
       <div class="dr"><span class="k">Заряд</span><span class="v" id="fi-charge">—</span></div>
-      <div class="dr" id="fi-corr" style="display:none"><span class="k">Поправка (от последнего разрыва)</span><span class="v"></span></div>
+      <div class="dr" id="fi-corr" style="display:none"><span class="k">Поправка (от цели)</span><span class="v"></span></div>
     </div>
 
     <div class="card" id="corr-card" style="display:none">
@@ -277,29 +305,11 @@ input:focus,select:focus{border-color:var(--accent);background:#fff}
       </div>
     </div>
 
-    <!-- Наблюдение с коптера -->
-    <div class="card">
-      <div class="ct">
-        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:700">
-          <input type="checkbox" id="obs-en" onchange="toggleObs()" style="width:18px;height:18px">
-          🚁 Наблюдение и корректировка с коптера
-        </label>
-      </div>
-      <div id="obs-fields" style="display:none">
-        <div class="r2">
-          <div><lbl>Широта коптера, °</lbl><input id="obs-lat" type="number" step="any" placeholder="46.87178" oninput="renderFire()" onchange="saveObsFields()"></div>
-          <div><lbl>Долгота коптера, °</lbl><input id="obs-lon" type="number" step="any" placeholder="29.56584" oninput="renderFire()" onchange="saveObsFields()"></div>
-        </div>
-        <lbl>Высота коптера, м</lbl>
-        <input id="obs-h" type="number" step="any" placeholder="150" oninput="renderFire()" onchange="saveObsFields()">
-        <div class="dr" style="margin-top:10px"><span class="k">Дир. угол коптер → цель</span><span class="v" id="obs-du">—</span></div>
-        <p class="msg" id="obs-msg"></p>
-      </div>
-    </div>
+    <div id="mod-slot-shot"></div>
 
     <!-- Ввод разрыва -->
     <div class="card">
-      <div class="ct" id="sh-title">Разрыв #1 — от цели</div>
+      <div class="ct" id="sh-title">Разрыв #1 · от ОП</div>
       <div class="r2">
         <div><lbl>Недолёт (−) / Перелёт (+), м</lbl><input id="sh-sf" type="number" placeholder="-50"></div>
         <div><lbl>Правее (+) / Левее (−), м</lbl><input id="sh-dv" type="number" placeholder="30"></div>
@@ -312,18 +322,13 @@ input:focus,select:focus{border-color:var(--accent);background:#fff}
       <h2>История разрывов</h2>
       <button class="bxs d" onclick="clearShots()">Сбросить</button>
     </div>
+    <button class="btn bp" style="margin-top:0;margin-bottom:10px" onclick="copyAll(this)">📋 Копировать ОП + цель + разрывы</button>
     <div id="sh-list"><div class="empty">Разрывов нет</div></div>
-
-    <div class="card" id="tot-card" style="display:none;margin-top:2px">
-      <div class="ct">Суммарное смещение последнего разрыва от цели</div>
-      <div class="sg">
-        <div class="st"><div class="sl">⬆ Север / ⬇ Юг</div><div class="sv" id="tot-ns">—</div></div>
-        <div class="st"><div class="sl">➡ Восток / ⬅ Запад</div><div class="sv" id="tot-ew">—</div></div>
-      </div>
-      <div class="dr"><span class="k">Расстояние от цели</span><span class="v" id="tot-d">—</span></div>
-    </div>
   </div>
 </div>
+
+<div class="mdl" id="mdl"><div class="mdl-box"><p id="mdl-txt"></p><div class="r2"><button class="btn bg" onclick="mdlClose(false)">Отмена</button><button class="btn bp" onclick="mdlClose(true)">Да</button></div></div></div>
+<div class="toast" id="toast"></div>
 
 <!-- Bottom nav -->
 <div class="bnav">
@@ -418,6 +423,27 @@ if(S.op){ // миграция со старой версии (одна ОП бе
 if(S.activeOpId===undefined) S.activeOpId=null;
 function save(){ try{localStorage.setItem('ac3',JSON.stringify(S));}catch(e){} }
 function getOP(){ return S.ops.find(o=>o.id===S.activeOpId)||null; }
+
+// Встроенные диалоги: в опубликованной странице confirm()/alert() браузера заблокированы
+let _mdlCb=null;
+function askConfirm(text, cb){
+  _mdlCb=cb;
+  document.getElementById('mdl-txt').textContent=text;
+  document.getElementById('mdl').classList.add('on');
+}
+function mdlClose(ok){
+  document.getElementById('mdl').classList.remove('on');
+  const cb=_mdlCb; _mdlCb=null;
+  if(ok && cb) cb();
+}
+let _toastT=null;
+function toast(text){
+  const el=document.getElementById('toast');
+  el.textContent=text; el.classList.add('on');
+  clearTimeout(_toastT);
+  _toastT=setTimeout(()=>el.classList.remove('on'),2600);
+}
+window.alert=function(m){ toast(m); };
 
 // ══════════════════════════════════════════════════
 // УТИЛИТЫ
@@ -585,7 +611,8 @@ function interp(distM, chKey){
     if(distM>=d0&&distM<=d1){
       const k=(distM-d0)/(d1-d0);
       return {
-        pricel: Math.round(p0+k*(p1-p0)),
+        raw:    p0+k*(p1-p0),
+        pricel: Math.floor(p0+k*(p1-p0)+1e-9),
         time:   Math.round((t0+k*(t1-t0))*10)/10,
         dP:     Math.abs(Math.round((p1-p0)/(d1-d0)*100)), // ΔП/100м
       };
@@ -606,6 +633,15 @@ function normDov(v){
 
 // Эффективные (пристрелянные) установки = геометрия до цели + накопленные
 // поправки по дальности/угломеру от предыдущих разрывов этой цели
+// Прицел без округления; за пределами таблицы — экстраполяция по крайнему интервалу
+function priceRaw(distM, chKey){
+  const d = TBL[chKey].data;
+  let i = 0;
+  if(distM >= d[d.length-1][0]) i = d.length-2;
+  else if(distM > d[0][0]){ while(i < d.length-2 && distM > d[i+1][0]) i++; }
+  const [d0,p0]=d[i],[d1,p1]=d[i+1];
+  return p0 + (distM-d0)/(d1-d0)*(p1-p0);
+}
 function calcEffective(t, c){
   const corrUgl   = t.corrUgl   || 0;
   const corrRange = t.corrRange || 0;
@@ -613,7 +649,16 @@ function calcEffective(t, c){
   if(effDist < 1) effDist = 1;
   const effUglDU = normDU(c.uglDU + corrUgl);
   const effDovDU = normDov(c.dovDU + corrUgl);
-  const fire = interp(effDist, S.charge);
+  const fire0 = interp(effDist, S.charge);
+  let fire = fire0;
+  // Прицел = прицел на дальность до цели + накопленная поправка по таблице стрельбы
+  if(c.fire && t.corrP!==undefined){
+    fire = {
+      pricel: Math.floor(c.fire.raw + t.corrP + 1e-9),
+      time:   fire0 ? fire0.time : c.fire.time,
+      dP:     fire0 ? fire0.dP   : c.fire.dP
+    };
+  }
   return {dist: effDist, uglDU: effUglDU, dovDU: effDovDU, fire};
 }
 
@@ -733,14 +778,15 @@ function selOP(id){
 }
 
 function delOP(id){
-  if(!confirm('Удалить эту ОП?')) return;
-  S.ops=S.ops.filter(o=>o.id!==id);
-  if(S.activeOpId===id) S.activeOpId=null;
-  save();
-  renderOPResult();
-  renderOPList();
-  renderTargets();
-  renderFire();
+  askConfirm('Удалить эту ОП?', ()=>{
+    S.ops=S.ops.filter(o=>o.id!==id);
+    if(S.activeOpId===id) S.activeOpId=null;
+    save();
+    renderOPResult();
+    renderOPList();
+    renderTargets();
+    renderFire();
+  });
 }
 
 function renderOPResult(){
@@ -790,12 +836,32 @@ document.getElementById('charge').value=S.charge||'4';
 // ══════════════════════════════════════════════════
 // ЦЕЛИ
 // ══════════════════════════════════════════════════
+function setTgMode(){
+  const polar = document.getElementById('t-mode').value==='polar';
+  document.getElementById('t-xy').style.display = polar ? 'none' : '';
+  document.getElementById('t-polar').style.display = polar ? '' : 'none';
+}
+
 function addTarget(){
   const type=document.getElementById('t-nm').value.trim()||'ПЕХОТА';
-  const x =parseFloat(document.getElementById('t-x').value);
-  const y =parseFloat(document.getElementById('t-y').value);
   const msg=document.getElementById('t-msg');
-  if(isNaN(x)||isNaN(y)){msg.className='msg err';msg.textContent='Введите координаты X и Y';return;}
+  const polar = document.getElementById('t-mode').value==='polar';
+  let x, y;
+  if(polar){
+    // Цель по дирекционному углу и дальности от активной ОП: X — север, Y — восток
+    const op=getOP();
+    if(!op){msg.className='msg err';msg.textContent='Сначала выберите ОП';return;}
+    const du=parseDU(document.getElementById('t-du').value);
+    const d =parseFloat(document.getElementById('t-dist').value);
+    if(du===null||isNaN(du)||isNaN(d)||d<=0){msg.className='msg err';msg.textContent='Введите дир. угол (например 40-16) и дальность в метрах';return;}
+    const a=duToRad(du);
+    x=Math.round(op.x + d*Math.cos(a));
+    y=Math.round(op.y + d*Math.sin(a));
+  } else {
+    x=parseFloat(document.getElementById('t-x').value);
+    y=parseFloat(document.getElementById('t-y').value);
+    if(isNaN(x)||isNaN(y)){msg.className='msg err';msg.textContent='Введите координаты X и Y';return;}
+  }
   if(Math.abs(x)<1000000||Math.abs(x)>9999999||Math.abs(y)<1000000||Math.abs(y)>9999999){
     msg.className='msg err';
     msg.textContent='X и Y должны быть 7-значными координатами СК-42 (пример: X=5196064, Y=5695679). Проверьте ввод.';
@@ -806,8 +872,7 @@ function addTarget(){
   S.targets.push({id:Date.now(),num:S.tgNum,name:nm,type,x,y,shots:[],corrUgl:0,corrRange:0});
   save();
   msg.className='msg ok';msg.textContent='✓ '+nm+' добавлена';
-  document.getElementById('t-x').value='';
-  document.getElementById('t-y').value='';
+  ['t-x','t-y','t-du','t-dist'].forEach(id=>document.getElementById(id).value='');
   renderTargets();
 }
 
@@ -818,15 +883,17 @@ function selTarget(id){
 }
 
 function delTarget(id){
-  if(!confirm('Удалить цель?')) return;
-  S.targets=S.targets.filter(t=>t.id!==id);
-  if(S.active===id) S.active=null;
-  save(); renderTargets();
+  askConfirm('Удалить цель?', ()=>{
+    S.targets=S.targets.filter(t=>t.id!==id);
+    if(S.active===id) S.active=null;
+    save(); renderTargets();
+  });
 }
 
 function clearTargets(){
-  if(!confirm('Удалить все цели?')) return;
-  S.targets=[]; S.active=null; save(); renderTargets();
+  askConfirm('Удалить все цели?', ()=>{
+    S.targets=[]; S.active=null; save(); renderTargets();
+  });
 }
 
 function exportKML(){
@@ -979,6 +1046,9 @@ function fallbackCopy(text,cb){
 // ══════════════════════════════════════════════════
 function getAT(){ return S.targets.find(t=>t.id===S.active)||null; }
 
+// Точки расширения: модули подключаются через Hooks. Без модулей приложение работает как обычно.
+const Hooks = {};
+
 function renderFire(){
   const t=getAT();
   document.getElementById('fi-empty').style.display=t?'none':'block';
@@ -986,7 +1056,7 @@ function renderFire(){
   if(!t) return;
 
   document.getElementById('fi-tname').textContent=t.name;
-  document.getElementById('sh-title').textContent=`Разрыв #${t.shots.length+1} — от цели`;
+  document.getElementById('sh-title').textContent=`Разрыв #${t.shots.length+1} · от ОП`;
   document.getElementById('fi-charge').textContent=TBL[S.charge].name;
 
   const c=getOP()?calcTarget(t):null;
@@ -1007,44 +1077,8 @@ function renderFire(){
     ['fi-dist','fi-dir','fi-dov','fi-uglomer','fi-pricel','fi-time'].forEach(id=>document.getElementById(id).textContent='—');
   }
   document.getElementById('corr-card').style.display = (t.shots.length>0) ? 'block' : 'none';
-  updateObsDU();
   renderShots(t);
-}
-
-function toggleObs(){
-  S.obs = S.obs || {};
-  S.obs.enabled = document.getElementById('obs-en').checked;
-  document.getElementById('obs-fields').style.display = S.obs.enabled ? 'block' : 'none';
-  save();
-  renderFire();
-}
-
-function saveObsFields(){
-  S.obs = S.obs || {};
-  S.obs.lat = document.getElementById('obs-lat').value;
-  S.obs.lon = document.getElementById('obs-lon').value;
-  S.obs.h   = document.getElementById('obs-h').value;
-  save();
-}
-
-// Дирекционный угол (в той же координатной системе СК-42/Гаусс-Крюгер, что и весь расчёт)
-// от положения коптера к цели. Возвращает {du, x, y} или null, если данные неполные.
-function obsDirToTarget(t){
-  const lat=parseFloat(document.getElementById('obs-lat').value);
-  const lon=parseFloat(document.getElementById('obs-lon').value);
-  const h  =parseFloat(document.getElementById('obs-h').value)||0;
-  if(!t || isNaN(lat) || isNaN(lon)) return null;
-  const xy=wgs84ToXY(lat,lon,h);
-  const dx=t.x-xy.x, dy=t.y-xy.y;
-  return {du: dirDU(dx,dy), x:xy.x, y:xy.y};
-}
-
-function updateObsDU(){
-  const el=document.getElementById('obs-du');
-  if(!el) return;
-  const t=getAT();
-  const r = t ? obsDirToTarget(t) : null;
-  el.textContent = r ? `${fmtDU(r.du)} (${(r.du/6000*360).toFixed(1)}°)` : '—';
+  if(Hooks.afterRender) Hooks.afterRender(t);
 }
 
 function addShot(){
@@ -1063,33 +1097,29 @@ function addShot(){
   if(!c){err.textContent='Ошибка расчёта цели';return;}
   const eff=calcEffective(t,c);
 
-  // Базис наблюдения: по умолчанию — линия ОП→цель; если включён коптер — его дирекционный угол на цель
-  let basisDU = c.dDU;
-  let basisSrc = 'ОП';
-  if(S.obs && S.obs.enabled){
-    const r = obsDirToTarget(t);
-    if(!r){ err.textContent='Введите широту и долготу коптера'; return; }
-    basisDU = r.du;
-    basisSrc = 'коптер';
-  }
-
-  // Абсолютное смещение разрыва на местности (север/восток) — вдоль базиса наблюдения
-  const dev = calcDeviation(basisDU, sfM, dvM);
-
-  // Проекция этого смещения на линию ОП→цель — именно она нужна для поправок орудия,
-  // т.к. орудие стреляет не по линии наблюдателя, а по своей собственной
-  const dirRadGun = duToRad(c.dDU);
-  const alongGun =  dev.north*Math.cos(dirRadGun) + dev.east*Math.sin(dirRadGun);
-  const perpGun  = -dev.north*Math.sin(dirRadGun) + dev.east*Math.cos(dirRadGun);
+  // Базис разрыва по умолчанию — ОП: недолёт/перелёт вдоль линии ОП→цель, правее/левее поперёк неё.
+  // Модуль может подменить базис через Hooks.resolveShot (вернуть null = обычный расчёт от ОП).
+  let rs = Hooks.resolveShot ? Hooks.resolveShot(t, c, sfM, dvM) : null;
+  if(rs && rs.error){ err.textContent=rs.error; return; }
+  if(!rs) rs = {basisDU:c.dDU, basisSrc:'ОП', dev:calcDeviation(c.dDU,sfM,dvM), along:sfM, perp:dvM};
+  const basisDU=rs.basisDU, basisSrc=rs.basisSrc, dev=rs.dev;
+  const alongGun=rs.along, perpGun=rs.perp;
 
   // Угломер/прицел, реально применённые для этого разрыва
   const uglShot=eff.uglDU;
   const pricelShot=eff.fire?eff.fire.pricel:null;
 
-  // Поправка орудия всегда считается заново от цели (не накапливается поверх предыдущей)
+  // Разрыв измеряется от цели, а стреляли уже с ранее введёнными установками.
+  // Поэтому новая установка = то, с чем стреляли, минус отклонение этого разрыва от цели.
+  // Дальность до разрыва от ОП и угловое отклонение разрыва от линии ОП→цель
+  const distBurst = Math.hypot(c.dist + alongGun, perpGun);
   const corrRangeApplied = -alongGun;
-  const uglMiss = Math.round(1000*perpGun/c.dist);
-  const corrUglApplied = -uglMiss;
+  const angMiss = Math.trunc(Math.atan2(perpGun, c.dist + alongGun) * 6000/(2*Math.PI));
+  const corrUglApplied = -angMiss;
+  // Поправка прицела: разница прицелов по таблице на дальность разрыва и на дальность цели
+  const dPr = priceRaw(distBurst, S.charge) - priceRaw(c.dist, S.charge);
+  // Каждый разрыв считается заново от ОП и цели, а не от предыдущего разрыва: ничего не накапливается
+  t.corrP     = -dPr;
   t.corrRange = corrRangeApplied;
   t.corrUgl   = corrUglApplied;
 
@@ -1097,7 +1127,7 @@ function addShot(){
   const effNew = calcEffective(t, c);
 
   t.shots.push({
-    num:t.shots.length+1, sfM, dvM, dev, uglShot, pricelShot, dirDU:c.dDU, basisDU, basisSrc,
+    num:t.shots.length+1, sfM, dvM, dev, uglShot, pricelShot, distBurst, dirDU:c.dDU, basisDU, basisSrc,
     corrRangeApplied, corrUglApplied,
     distNew: effNew.dist, uglNew: effNew.uglDU,
     pricelNew: effNew.fire?effNew.fire.pricel:null
@@ -1139,15 +1169,15 @@ function buildCorrText(t){
   const ns = last.dev.north>=0 ? `С:${Math.round(last.dev.north)}` : `Ю:${Math.round(Math.abs(last.dev.north))}`;
   const ew = last.dev.east>=0  ? `В:${Math.round(last.dev.east)}`  : `З:${Math.round(Math.abs(last.dev.east))}`;
 
-  const pricelNow = eff.fire?eff.fire.pricel:null;
-  const pricelDelta = (pricelNow!==null && last.pricelShot!==null) ? (pricelNow-last.pricelShot) : 0;
+  // Базовые установки (ОТН + доворот от ОН, дальность до цели) сравниваются с текущими установками.
+  const pricelNow  = eff.fire?eff.fire.pricel:null;
+  const pricelBase = c.fire?c.fire.pricel:null;
+  const pricelDelta = (pricelNow!==null && pricelBase!==null) ? (pricelNow-pricelBase) : 0;
   const pricelStr = pricelNow!==null
     ? `${pricelNow} (${pricelDelta>=0?'+':''}${pricelDelta})`
     : 'вне диап.';
 
-  let uglDelta = eff.uglDU - last.uglShot;
-  while(uglDelta >  3000) uglDelta -= 6000;
-  while(uglDelta < -3000) uglDelta += 6000;
+  const uglDelta = normDov(eff.dovDU - c.dovDU);   // = поправка угломера от цели
   const dovStr = `${fmtDU(normDU(eff.dovDU))} (${uglDelta>=0?'+':'-'}${fmtDU(Math.abs(uglDelta))})`;
 
   const now=new Date();
@@ -1164,7 +1194,7 @@ function buildCorrText(t){
 Отклонение по с/с, м: ${ns}, ${ew}
 Прицел, дел: ${pricelStr}
 Доворот, д.у: ${dovStr}
-Угломер ОТН, д.у: ${op.otn}
+Угломер ОТН, д.у: ${fmtDU(parseDU(op.otn))}
 Дир.угол исчисл., тыс (град): ${fmtDU(normDU(c.dDU))} (${degStr}°)
 Время, д/м/г ч:м:с: ${timeStr}`;
 }
@@ -1189,66 +1219,161 @@ function shareCorr(){
   }
 }
 
+function buildFullText(t){
+  const op=getOP();
+  const lines=[];
+  if(op){
+    lines.push(`ОП: ${op.cs}`,`X= ${op.x}`,`Y= ${op.y}`,`ОТН: ${fmtDU(parseDU(op.otn))}`,`ОН: ${fmtDU(parseDU(op.on))}`);
+  } else lines.push('ОП: не выбрана');
+  lines.push(`Заряд: ${TBL[S.charge].name}`,'');
+  lines.push(`Цель: ${targetLabel(t)}`,`X= ${t.x}`,`Y= ${t.y}`);
+  const c=op?calcTarget(t):null;
+  if(c){
+    lines.push(`Д= ${Math.round(c.dist)} м, дир.угол ${fmtDU(c.dDU)}, доворот ${c.dovDU<0?'-':'+'}${fmtDU(Math.abs(c.dovDU))}`);
+    lines.push(`Расчёт по цели: угломер ${fmtDU(c.uglDU)}, прицел ${c.fire?c.fire.pricel:'вне диап.'}`);
+  }
+  lines.push('');
+  if(!t.shots.length){ lines.push('Разрывов нет'); }
+  else{
+    lines.push('Разрывы (от ОП):');
+    t.shots.forEach(sh=>{
+      const sf = sh.sfM===0?'по дальности':(sh.sfM<0?'недолёт ':'перелёт ')+Math.abs(sh.sfM);
+      const dv = sh.dvM===0?'по направлению':(sh.dvM>0?'правее ':'левее ')+Math.abs(sh.dvM);
+      let r=`№${sh.num}: ${sf}, ${dv}${sh.basisSrc&&sh.basisSrc!=='ОП'?' [от '+sh.basisSrc+']':''}`;
+      if(sh.uglNew!==undefined) r+=` → угломер ${fmtDU(sh.uglNew)}, прицел ${sh.pricelNew!==null?sh.pricelNew:'вне диап.'}`;
+      lines.push(r);
+    });
+    const eff=c?calcEffective(t,c):null;
+    if(eff) lines.push('',`Итог: угломер ${fmtDU(eff.uglDU)}, прицел ${eff.fire?eff.fire.pricel:'вне диап.'}`);
+  }
+  return lines.join('\n');
+}
+
+function copyAll(el){
+  const t=getAT();
+  if(!t) return;
+  copyCoord(el, buildFullText(t));
+}
+
 function clearShots(){
   const t=getAT();
   if(!t) return;
-  if(!confirm('Сбросить историю разрывов?')) return;
-  t.shots=[]; t.corrUgl=0; t.corrRange=0; save(); renderFire();
+  askConfirm('Сбросить историю разрывов?', ()=>{
+    t.shots=[]; t.corrUgl=0; t.corrRange=0; t.corrP=0; save(); renderFire();
+  });
 }
 
 function renderShots(t){
   const el=document.getElementById('sh-list');
-  const totCard=document.getElementById('tot-card');
-
-  if(!t.shots.length){
-    el.innerHTML='<div class="empty">Разрывов нет</div>';
-    totCard.style.display='none';
-    return;
-  }
-
-  el.innerHTML=[...t.shots].reverse().map(s=>{
-    const ugStr=s.uglShot!==undefined?fmtDU(s.uglShot):'—';
-    const basisLabel = s.basisSrc==='коптер'
-      ? `🚁 от коптера (дир.угол ${fmtDU(s.basisDU)}, ${(s.basisDU/6000*360).toFixed(1)}°)`
-      : '📍 от ОП';
+  if(!t.shots.length){ el.innerHTML='<div class="empty">Разрывов нет</div>'; return; }
+  const sg=n=>(n<0?'−':'+');
+  el.innerHTML=[...t.shots].reverse().map((s,i)=>{
+    const sf = s.sfM===0 ? 'По дальности' : (s.sfM<0?'Недолёт ':'Перелёт ')+Math.abs(s.sfM)+' м';
+    const dv = s.dvM===0 ? 'По направлению' : (s.dvM>0?'Правее ':'Левее ')+Math.abs(s.dvM)+' м';
     const hasCorr = s.corrRangeApplied!==undefined;
-    const corrBlock = hasCorr ? `
-      <div class="sx" style="background:var(--accent-bg);border-radius:8px;padding:8px 10px;margin-top:8px">
-        <div style="font-weight:700;color:var(--accent);font-size:12px;margin-bottom:4px">Расчёт поправки по этому разрыву</div>
-        <div class="sr"><span class="k">ΔДальность</span><span class="v">${s.corrRangeApplied>=0?'+':''}${Math.round(s.corrRangeApplied)} м</span></div>
-        <div class="sr"><span class="k">ΔУгломер</span><span class="v">${s.corrUglApplied>=0?'+':''}${fmtDU(Math.abs(s.corrUglApplied))} д.у.</span></div>
-        <div class="sr"><span class="k">→ Новый угломер</span><span class="v" style="color:var(--accent);font-weight:700">${fmtDU(s.uglNew)}</span></div>
-        <div class="sr"><span class="k">→ Новый прицел</span><span class="v" style="color:var(--accent);font-weight:700">${s.pricelNew!==null?s.pricelNew+' дел':'вне диап.'}</span></div>
+    const tiles = hasCorr ? `
+      <div class="sh-g">
+        <div class="sh-t"><div class="l">Д разрыва</div><div class="v">${s.distBurst!==undefined?Math.round(s.distBurst):'—'}</div><div class="s">${s.distBurst!==undefined?'цель '+Math.round(s.distBurst-s.sfM):''}</div></div>
+        <div class="sh-t"><div class="l">Угломер</div><div class="v">${fmtDU(s.uglNew)}</div><div class="s">${sg(s.corrUglApplied)}${fmtDU(Math.abs(s.corrUglApplied))}${s.uglShot!==undefined?' · было '+fmtDU(s.uglShot):''}</div></div>
+        <div class="sh-t"><div class="l">Прицел</div><div class="v">${s.pricelNew!==null?s.pricelNew:'—'}</div><div class="s">${s.pricelShot!=null?'было '+s.pricelShot:'вне диап.'}</div></div>
       </div>` : '';
-    return `<div class="si ${s.num===1?'f':''}">
-      <div class="sn">Разрыв #${s.num} <span style="font-weight:400;font-size:12px;color:var(--text2)">${basisLabel}</span></div>
-      <div class="sr"><span class="k">Недолёт/Перелёт</span><span class="v">${s.sfM>0?'+':''}${s.sfM} м</span></div>
-      <div class="sr"><span class="k">Право/Лево</span><span class="v">${s.dvM>0?'+':''}${s.dvM} м</span></div>
-      <div class="sr"><span class="k">Угломер наводчика (было)</span><span class="v">${ugStr} д.у.</span></div>
-      ${s.pricelShot!==undefined&&s.pricelShot!==null?`<div class="sr"><span class="k">Прицел наводчика (было)</span><span class="v">${s.pricelShot} дел</span></div>`:''}
-      <div class="sx">
-        От цели: ${fmtAxis(s.dev.north,'север','юг')} / ${fmtAxis(s.dev.east,'восток','запад')} — ${Math.round(s.dev.dist)} м
-      </div>
-      ${corrBlock}
+    return `<div class="sh-card ${i===0?'last':''}">
+      <div class="sh-h"><span class="sh-n">№${s.num}</span><span class="sh-chip">${sf}</span><span class="sh-chip">${dv}</span>${s.basisSrc&&s.basisSrc!=='ОП'?`<span class="sh-chip">от ${s.basisSrc}</span>`:''}</div>
+      ${tiles}
+      <div class="sh-f">Смещение от цели: ${fmtAxis(s.dev.north,'север','юг')} · ${fmtAxis(s.dev.east,'восток','запад')} · ${Math.round(s.dev.dist)} м</div>
     </div>`;
   }).join('');
-
-  // Показываем смещение последнего разрыва
-  const last=t.shots[t.shots.length-1];
-  totCard.style.display='block';
-  document.getElementById('tot-ns').textContent=fmtAxis(last.dev.north,'север','юг');
-  document.getElementById('tot-ew').textContent=fmtAxis(last.dev.east,'восток','запад');
-  document.getElementById('tot-d').textContent=Math.round(last.dev.dist)+' м от цели';
 }
+
+// ===== COPTER MODULE =====================================================================
+// Самодостаточный модуль. Чтобы убрать коптер — удалить этот блок целиком
+// (вызовы Hooks.* в ядре без модуля ничего не делают; поле S.obs в сохранении безвредно).
+(function(){
+  const $ = id => document.getElementById(id);
+  const st = () => (S.obs = S.obs || {});
+
+  const CARD = `
+    <div class="card" id="mod-copter">
+      <div class="ct">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:700">
+          <input type="checkbox" id="obs-en" style="width:18px;height:18px">
+          🚁 Наблюдение и корректировка с коптера
+        </label>
+      </div>
+      <div id="obs-fields" style="display:none">
+        <div class="r2">
+          <div><lbl>Широта коптера, °</lbl><input id="obs-lat" type="number" step="any" placeholder="46.87178"></div>
+          <div><lbl>Долгота коптера, °</lbl><input id="obs-lon" type="number" step="any" placeholder="29.56584"></div>
+        </div>
+        <lbl>Высота коптера, м</lbl>
+        <input id="obs-h" type="number" step="any" placeholder="150">
+        <div class="dr" style="margin-top:10px"><span class="k">Дир. угол коптер → цель</span><span class="v" id="obs-du">—</span></div>
+        <p class="msg" style="font-size:11px;color:var(--text2)">Недолёт/перелёт и правее/левее отсчитываются от линии коптер → цель.</p>
+      </div>
+    </div>`;
+
+  // Дирекционный угол (СК-42 / Гаусс-Крюгер, как и весь расчёт) от коптера к цели
+  function dirToTarget(t){
+    const o = st();
+    const lat=parseFloat(o.lat), lon=parseFloat(o.lon), h=parseFloat(o.h)||0;
+    if(!t || isNaN(lat) || isNaN(lon)) return null;
+    const xy = wgs84ToXY(lat, lon, h);
+    return {du: dirDU(t.x-xy.x, t.y-xy.y), x:xy.x, y:xy.y};
+  }
+
+  function readFields(){
+    const o = st();
+    o.lat=$('obs-lat').value; o.lon=$('obs-lon').value; o.h=$('obs-h').value;
+  }
+
+  Hooks.init = function(){
+    const slot = $('mod-slot-shot');
+    if(!slot) return;
+    slot.innerHTML = CARD;
+    const o = st();
+    $('obs-en').checked = !!o.enabled;
+    $('obs-fields').style.display = o.enabled ? 'block' : 'none';
+    if(o.lat) $('obs-lat').value=o.lat;
+    if(o.lon) $('obs-lon').value=o.lon;
+    if(o.h)   $('obs-h').value=o.h;
+    $('obs-en').addEventListener('change', ()=>{
+      o.enabled = $('obs-en').checked;
+      $('obs-fields').style.display = o.enabled ? 'block' : 'none';
+      save(); renderFire();
+    });
+    ['obs-lat','obs-lon','obs-h'].forEach(id=>{
+      $(id).addEventListener('input', ()=>{ readFields(); renderFire(); });
+      $(id).addEventListener('change', ()=>{ readFields(); save(); });
+    });
+  };
+
+  Hooks.afterRender = function(t){
+    const el = $('obs-du');
+    if(!el) return;
+    const r = t ? dirToTarget(t) : null;
+    el.textContent = r ? `${fmtDU(r.du)} (${(r.du/6000*360).toFixed(1)}°)` : '—';
+    if(st().enabled && t) $('sh-title').textContent = `Разрыв #${t.shots.length+1} · от коптера`;
+  };
+
+  // Разрыв измерен от линии коптер→цель: переводим в смещение на местности (север/восток)
+  // и проецируем на линию ОП→цель — по ней стреляет орудие.
+  Hooks.resolveShot = function(t, c, sfM, dvM){
+    if(!st().enabled) return null;
+    const r = dirToTarget(t);
+    if(!r) return {error:'Введите широту и долготу коптера'};
+    const dev = calcDeviation(r.du, sfM, dvM);
+    const g = duToRad(c.dDU);
+    return {
+      basisDU: r.du, basisSrc: 'коптера', dev,
+      along:  dev.north*Math.cos(g) + dev.east*Math.sin(g),
+      perp:  -dev.north*Math.sin(g) + dev.east*Math.cos(g)
+    };
+  };
+})();
+// ===== END COPTER MODULE ==================================================================
 
 // INIT
-if(S.obs){
-  document.getElementById('obs-en').checked = !!S.obs.enabled;
-  document.getElementById('obs-fields').style.display = S.obs.enabled ? 'block' : 'none';
-  if(S.obs.lat) document.getElementById('obs-lat').value = S.obs.lat;
-  if(S.obs.lon) document.getElementById('obs-lon').value = S.obs.lon;
-  if(S.obs.h)   document.getElementById('obs-h').value   = S.obs.h;
-}
+if(Hooks.init) Hooks.init();
 renderTargets();
 renderFire();
 
