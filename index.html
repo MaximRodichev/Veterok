@@ -304,6 +304,14 @@ details.fold>summary{padding:12px 4px;font-size:15px}
 #p-fi .sh-t .s{font-size:9px}
 #p-fi .sh-f{margin-top:4px;font-size:10px}
 #p-fi .empty{padding:14px 10px;font-size:13px}
+#mp-rlabel{position:absolute;transform:translate(-50%,-50%);background:rgba(24,26,30,.92);color:#fff;font-weight:700;font-size:12px;padding:3px 8px;border-radius:6px;pointer-events:none;z-index:460;white-space:nowrap;display:none}
+.mp-r3{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:8px 0}
+.mp-r3 .btn{font-size:12px;padding:0 4px;height:42px;margin-top:0}
+.hitbtn{width:100%;height:38px;border:none;border-radius:10px;background:#c62828;color:#fff;font-size:14px;font-weight:800;margin:0 0 6px}
+.hitbtn.on{background:#2e7d32}
+.hitb{background:#2e7d32;color:#fff;border-radius:5px;padding:1px 6px;font-size:10px;font-weight:800;margin-left:6px;vertical-align:middle}
+.ti.hit{opacity:.78}
+.mdl-box{max-height:92vh;overflow-y:auto}
 </style>
 </head>
 <body>
@@ -434,6 +442,7 @@ details.fold>summary{padding:12px 4px;font-size:15px}
     </div>
     <div style="display:none"><span id="fi-min"></span><span id="fi-max"></span><span id="fi-dov"></span><span id="fi-dir"></span><div id="fi-corr"><span class="v"></span></div></div>
 
+    <button class="hitbtn" id="fi-hit" onclick="toggleHit()">Цель поражена</button>
     <div class="sec">Установки стрельбы</div>
     <div class="tblw"><table class="tbl big">
       <thead><tr><th>Прицел</th><th>Доворот</th><th>Угломер ОТН</th></tr></thead>
@@ -486,6 +495,13 @@ details.fold>summary{padding:12px 4px;font-size:15px}
   </div>
 </div>
 
+<div class="mdl" id="opedit"><div class="mdl-box"><p>Изменить ОП</p>
+  <lbl>Позывной</lbl><input id="oe-cs" type="text">
+  <div class="r2"><div><lbl>ОТН</lbl><input id="oe-otn" type="text" inputmode="numeric" placeholder="35-52"></div><div><lbl>ОН</lbl><input id="oe-on" type="text" inputmode="numeric" placeholder="51-00"></div></div>
+  <div class="r2"><div><lbl>X</lbl><input id="oe-x" type="number" inputmode="numeric"></div><div><lbl>Y</lbl><input id="oe-y" type="number" inputmode="numeric"></div></div>
+  <div class="msg err" id="oe-err"></div>
+  <div class="r2"><button class="btn bg" onclick="closeOPEdit()">Отмена</button><button class="btn bp" onclick="saveOPEdit()">Сохранить</button></div>
+</div></div>
 <div class="mdl" id="mdl"><div class="mdl-box"><p id="mdl-txt"></p><div class="r2"><button class="btn bg" onclick="mdlClose(false)">Отмена</button><button class="btn bp" onclick="mdlClose(true)">Да</button></div></div></div>
 <div class="toast" id="toast"></div>
 
@@ -950,6 +966,56 @@ function saveOP(){
   renderFire();
 }
 
+// Изменение ОП (позывной, ОТН, ОН, координаты) — из настроек и с карты; разрывы пересчитываются
+function updateOP(id, f){
+  const o=S.ops.find(x=>x.id===id); if(!o) return 'ОП не найдена';
+  const cs=String(f.cs!==undefined?f.cs:o.cs).trim();
+  const otn=String(f.otn!==undefined?f.otn:o.otn).trim();
+  const on=String(f.on!==undefined?f.on:o.on).trim();
+  const x=f.x!==undefined?parseFloat(f.x):o.x, y=f.y!==undefined?parseFloat(f.y):o.y;
+  if(!cs) return 'Введите позывной ОП';
+  if(parseDU(otn)===null) return 'Неверный формат ОТН (пример: 35-52)';
+  if(parseDU(on)===null) return 'Неверный формат ОН (пример: 51-00)';
+  if(isNaN(x)||isNaN(y)||Math.abs(x)<1000000||Math.abs(x)>9999999||Math.abs(y)<1000000||Math.abs(y)>9999999) return 'X и Y — 7-значные координаты СК-42';
+  Object.assign(o,{cs,otn,on,x,y});
+  S.targets.forEach(t=>{ rebuildShots(t); restoreCorr(t); });
+  save(); renderOPResult(); renderOPList(); renderTargets(); renderFire();
+  if(window.MapMod && MapMod.redraw) MapMod.redraw();
+  return null;
+}
+let _oeId=null;
+function openOPEdit(id){
+  const o=S.ops.find(x=>x.id===id); if(!o) return;
+  _oeId=id;
+  document.getElementById('oe-cs').value=o.cs; document.getElementById('oe-otn').value=o.otn;
+  document.getElementById('oe-on').value=o.on; document.getElementById('oe-x').value=o.x; document.getElementById('oe-y').value=o.y;
+  document.getElementById('oe-err').textContent='';
+  document.getElementById('opedit').classList.add('on');
+}
+function closeOPEdit(){ document.getElementById('opedit').classList.remove('on'); }
+function saveOPEdit(){
+  const g=i=>document.getElementById(i).value;
+  const err=updateOP(_oeId,{cs:g('oe-cs'),otn:g('oe-otn'),on:g('oe-on'),x:g('oe-x'),y:g('oe-y')});
+  if(err){ document.getElementById('oe-err').textContent=err; return; }
+  closeOPEdit(); toast('ОП обновлена');
+}
+function findOnMap(x,y){ if(window.MapMod) MapMod.find(x,y,true); else toast('Карта не подключена'); }
+
+// Цель поражена (вместо «Стой, записать»)
+function toggleHit(id){
+  const t = id ? S.targets.find(x=>x.id===id) : getAT();
+  if(!t) return;
+  t.hit = !t.hit; t.hitAt = t.hit ? Date.now() : undefined;
+  save(); renderTargets(); renderFire();
+  if(window.MapMod && MapMod.redraw) MapMod.redraw();
+  toast(t.hit ? 'Цель поражена' : 'Цель возвращена в работу');
+}
+function updateHitBtn(t){
+  const b=document.getElementById('fi-hit'); if(!b || !t) return;
+  b.className='hitbtn'+(t.hit?' on':'');
+  b.textContent = t.hit ? '✓ Цель поражена — вернуть в работу' : 'Цель поражена';
+}
+
 function selOP(id){
   S.activeOpId=id;
   save();
@@ -996,6 +1062,8 @@ function renderOPList(){
       <div class="om"><span>X:${o.x}</span><span>Y:${o.y}</span><span>ОТН:${o.otn}</span><span>ОН:${o.on}</span></div>
       <div class="oa" onclick="event.stopPropagation()">
         <button class="bxs g" onclick="selOP(${o.id})">Выбрать</button>
+        <button class="bxs" onclick="openOPEdit(${o.id})">Изменить</button>
+        <button class="bxs" onclick="findOnMap(${o.x},${o.y})">На карте</button>
         <button class="bxs d" onclick="delOP(${o.id})">Удалить</button>
       </div>
     </div>`;
@@ -1188,15 +1256,17 @@ function renderTargets(){
       : c.dist > 50000
         ? `<span style="color:var(--danger,#c0392b);font-weight:700">${ic('warn')} Д: ${Math.round(c.dist)} м — проверьте координаты ОП!</span>`
         : `<span>Д: ${Math.round(c.dist)} м</span><span class="ugl">Угломер: ${fmtDU(eff.uglDU)}</span><span>Прицел: ${eff.fire?eff.fire.pricel+' дел':'вне диап.'}</span><span>Разрывов: ${t.shots.length}</span>`;
-    return `<div class="ti ${isSel?'sel':''}" onclick="selTarget(${t.id})">
-      <div class="tn">${t.name}${isSel?' ◀ активная':''}</div>
+    return `<div class="ti ${isSel?'sel':''} ${t.hit?'hit':''}" onclick="selTarget(${t.id})">
+      <div class="tn">${t.name}${t.hit?'<span class="hitb">ПОРАЖЕНА</span>':''}${isSel?' ◀ активная':''}</div>
       <div class="tm">${meta}</div>
       <div class="tc" onclick="event.stopPropagation()">
         <span class="cbtn" onclick="copyFull(this,${t.id})">${ic('copy')} Скопировать цель</span>
         <span class="cbtn" onclick="shareFull(${t.id})">${ic('send')} Передать</span>
+        <span class="cbtn" onclick="findOnMap(${t.x},${t.y})">${ic('map')} На карте</span>
       </div>
       <div class="ta" onclick="event.stopPropagation()">
         <button class="bxs g" onclick="selTarget(${t.id})">Выбрать</button>
+        <button class="bxs" onclick="toggleHit(${t.id})">${t.hit?'Вернуть':'Поражена'}</button>
         <button class="bxs d" onclick="delTarget(${t.id})">Удалить</button>
       </div>
     </div>`;
@@ -1311,6 +1381,7 @@ function renderFire(){
   renderCorrTable(t);
   if(window.Fire) Fire.idle();
   if(Hooks.afterRender) Hooks.afterRender(t);
+  updateHitBtn(t);
 }
 
 function addShot(){
@@ -1712,7 +1783,7 @@ function renderShots(t){
     'Google спутник': ['https://mt{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', G],
     'Схема OSM':      ['https://tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:19, attribution:'© OpenStreetMap'}]
   };
-  let map=null, group=null, fitted=false, lfPromise=null, placing=null, found=null, me=null, rl=null, ruler=null;
+  let map=null, group=null, fitted=false, lfPromise=null, placing=null, found=null, me=null, rl=null, ruler=null, ov=null, rlabel=null, vlines=[], vcircles=[];
 
   const CSS = `
   .mpage{display:none;position:fixed;left:0;right:0;z-index:90;
@@ -1783,7 +1854,7 @@ function renderShots(t){
   function ensureMap(){
     if(map) return;
     const canRot = !!(window.L && L.Map.prototype.setBearing);
-    map = L.map('map-el',{zoomControl:false, rotate:canRot, touchRotate:canRot, rotateControl:false, bearing:0});
+    map = L.map('map-el',{zoomControl:false, rotate:canRot, touchRotate:canRot, rotateControl:false, bearing:0, zoomAnimation:false, markerZoomAnimation:false, fadeAnimation:false});
     map._canRot = canRot;
     const bases={};
     Object.keys(TILES).forEach(k=>{ bases[k]=L.tileLayer(TILES[k][0], TILES[k][1]); });
@@ -1796,10 +1867,44 @@ function renderShots(t){
     map.on('zoomend', ()=>draw(false));
     map.on('move', ()=>{ updateCenter(); rulerUpdate(); });
     map.on('rotate', updateCompass);
+    // Линии рисуются своим слоем поверх карты и пересчитываются на каждый кадр жеста (сдвиг, зум, поворот)
+    const NS='http://www.w3.org/2000/svg';
+    ov=document.createElementNS(NS,'svg');
+    ov.setAttribute('style','position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:450;overflow:visible');
+    map.getContainer().appendChild(ov);
+    rlabel=document.createElement('div'); rlabel.id='mp-rlabel'; map.getContainer().appendChild(rlabel);
+    map.on('move zoom rotate moveend zoomend resize viewreset', renderOv);
     updateCompass();
     map.on('click', e=>{
       if(placing) applyPlace(e.latlng); else closeSheet();
     });
+  }
+
+  function renderOv(){
+    if(!map || !ov) return;
+    const P=q=>map.latLngToContainerPoint(q);
+    const f=v=>v.toFixed(1);
+    const all=vlines.slice();
+    if(ruler) all.push({a:ruler.a, b:map.getCenter(), color:'#ffeb3b', w:3, dash:'8 6'});
+    let h='';
+    all.forEach(l=>{
+      const a=P(l.a), b=P(l.b);
+      const xy=`x1="${f(a.x)}" y1="${f(a.y)}" x2="${f(b.x)}" y2="${f(b.y)}"`;
+      h+=`<line ${xy} stroke="#000" stroke-opacity=".4" stroke-width="${l.w+2}" stroke-linecap="round"${l.dash?` stroke-dasharray="${l.dash}"`:''}/>`;
+      h+=`<line ${xy} stroke="${l.color}" stroke-width="${l.w}" stroke-linecap="round"${l.dash?` stroke-dasharray="${l.dash}"`:''}/>`;
+    });
+    vcircles.forEach(c=>{
+      const p=P(c.c), e=P([c.c[0], c.c[1]+c.r/(111320*Math.cos(c.c[0]*Math.PI/180))]);
+      h+=`<circle cx="${f(p.x)}" cy="${f(p.y)}" r="${f(Math.hypot(e.x-p.x,e.y-p.y))}" fill="#2196f3" fill-opacity=".12" stroke="#2196f3" stroke-width="1"/>`;
+    });
+    if(ruler){ const a=P(ruler.a); h+=`<circle cx="${f(a.x)}" cy="${f(a.y)}" r="5" fill="#ffeb3b" stroke="#000" stroke-width="2"/>`; }
+    ov.innerHTML=h;
+    if(ruler){
+      const a=P(ruler.a), b=P(map.getCenter());
+      rlabel.style.display='block';
+      rlabel.style.left=((a.x+b.x)/2)+'px'; rlabel.style.top=((a.y+b.y)/2)+'px';
+      rlabel.textContent=ruler.txt||'';
+    } else rlabel.style.display='none';
   }
 
   // ---------- значки: размер зависит от масштаба, подписи — только при достаточном приближении ----------
@@ -1810,6 +1915,7 @@ function renderShots(t){
     cop: (a)=>svg(`<path d="M12 2L22 12L12 22L2 12Z" fill="#2e7d32" stroke="${a?'#ffeb3b':'#fff'}" stroke-width="${a?3:2}" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="#fff"/>`),
     me:  ()=>svg('<circle cx="12" cy="12" r="8" fill="#2196f3" stroke="#fff" stroke-width="3"/>'),
     pin: ()=>svg('<circle cx="12" cy="12" r="8" fill="none" stroke="#ffeb3b" stroke-width="3"/><circle cx="12" cy="12" r="2.5" fill="#ffeb3b"/>'),
+    tgh: (a)=>svg(`<circle cx="12" cy="12" r="8.5" fill="#6b7280" stroke="#fff" stroke-width="2"/><path d="M7.5 12.5l3 3L16.5 9" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>${a?'<circle cx="12" cy="12" r="10.5" fill="none" stroke="#ffeb3b" stroke-width="2"/>':''}`),
     br:  ()=>svg('<path d="M5 5L19 19M19 5L5 19" stroke="#000" stroke-width="6" stroke-linecap="round"/><path d="M5 5L19 19M19 5L5 19" stroke="#f9a825" stroke-width="3" stroke-linecap="round"/>')
   };
   function mk(type, active, label, size){
@@ -1823,6 +1929,7 @@ function renderShots(t){
   function draw(fit){
     if(!map) return;
     group.clearLayers();
+    vlines=[]; vcircles=[];
     const pts=[];
     const op=getOP();
     const put=(x,y,icon,onclick)=>{
@@ -1832,19 +1939,19 @@ function renderShots(t){
       if(onclick) m.on('click',()=>{ if(!placing) onclick(); });
       return p;
     };
-    S.ops.forEach(o=> put(o.x,o.y,mk('op',o.id===S.activeOpId,o.cs),()=>pickOP(o.id)));
+    S.ops.forEach(o=> put(o.x,o.y,mk('op',o.id===S.activeOpId,o.cs),()=>openOP(o.id)));
     S.targets.forEach(t=>{
       const act=t.id===S.active;
-      const p=put(t.x,t.y,mk('tg',act,targetLabel(t)),()=>openTarget(t.id));
+      const p=put(t.x,t.y,mk(t.hit?'tgh':'tg',act,(t.hit?'✓ ':'')+targetLabel(t)),()=>openTarget(t.id));
       if(!p) return;
-      if(act && op) L.polyline([ll(op.x,op.y),p],{color:'#fff',weight:2,dashArray:'6 6'}).addTo(group);
-      if(act) (t.shots||[]).forEach(sh=>{
+      if(act && op) vlines.push({a:ll(op.x,op.y), b:p, color:'#fff', w:2, dash:'6 6'});
+      if(act) (t.shots||[]).forEach((sh,si)=>{
         if(!sh.dev) return;
-        const bp=put(t.x+sh.dev.north, t.y+sh.dev.east, mk('br',false,'№'+sh.num,Math.max(12,Math.min(22,10+(map.getZoom()-12)*1.5))));
-        if(bp) L.polyline([p,bp],{color:'#f9a825',weight:1.5}).addTo(group);
+        const bp=put(t.x+sh.dev.north, t.y+sh.dev.east, mk('br',false,'№'+sh.num,Math.max(12,Math.min(22,10+(map.getZoom()-12)*1.5))),()=>openBurst(t.id,si));
+        if(bp) vlines.push({a:p, b:bp, color:'#f9a825', w:1.5});
       });
       const cp=copters().find(c=>c.id===t.copterId);
-      if(cp) L.polyline([[cp.lat,cp.lon],p],{color:'#66bb6a',weight:1.5,dashArray:'3 6'}).addTo(group);
+      if(cp) vlines.push({a:[cp.lat,cp.lon], b:p, color:'#66bb6a', w:1.5, dash:'3 6'});
     });
     copters().forEach(c=>{
       const act=S.targets.some(t=>t.id===S.active && t.copterId===c.id);
@@ -1852,10 +1959,11 @@ function renderShots(t){
       L.marker([c.lat,c.lon],{icon:mk('cop',act,c.name)}).on('click',()=>{ if(!placing) openCopter(c.id); }).addTo(group);
     });
     if(me){
-      L.circle([me.lat,me.lon],{radius:me.acc||0,color:'#2196f3',weight:1,fillOpacity:.1}).addTo(group);
+      vcircles.push({c:[me.lat,me.lon], r:me.acc||0});
       L.marker([me.lat,me.lon],{icon:mk('me',false,'',16)}).addTo(group);
     }
     if(found){ try{ L.marker(ll(found.x,found.y),{icon:mk('pin',false,found.x+' / '+found.y,28)}).addTo(group); }catch(e){} }
+    renderOv();
     if(fit && pts.length){
       if(pts.length===1) map.setView(pts[0],16);
       else map.fitBounds(L.latLngBounds(pts),{padding:[50,50],maxZoom:17});
@@ -1882,16 +1990,13 @@ function renderShots(t){
     if(!map) return;
     stopPlace(); closeSheet();
     const a=map.getCenter();
-    ruler={a, line:L.polyline([a,a],{color:'#ffeb3b',weight:3,dashArray:'8 6'}).addTo(rl)};
-    L.circleMarker(a,{radius:5,color:'#000',weight:2,fillColor:'#ffeb3b',fillOpacity:1}).addTo(rl);
-    ruler.line.bindTooltip('',{permanent:true,direction:'center',className:'mp-tip'});
+    ruler={a, txt:''};
     $('mp-ruler').style.display='flex';
     document.querySelector('.mp-tools button[data-t=ruler]').classList.add('on');
-    rulerUpdate();
+    rulerUpdate(); renderOv();
   }
   function rulerStop(){
-    if(rl) rl.clearLayers();
-    ruler=null;
+    ruler=null; renderOv();
     $('mp-ruler').style.display='none';
     const b=document.querySelector('.mp-tools button[data-t=ruler]'); if(b) b.classList.remove('on');
   }
@@ -1901,9 +2006,7 @@ function renderShots(t){
     const xa=wgs84ToXY(ruler.a.lat,ruler.a.lng,0), xb=wgs84ToXY(b.lat,b.lng,0);
     const dx=xb.x-xa.x, dy=xb.y-xa.y;
     const d=Math.hypot(dx,dy), du=dirDU(dx,dy);
-    ruler.line.setLatLngs([ruler.a,b]);
-    const txt=Math.round(d)+' м · '+fmtDU(du);
-    ruler.line.setTooltipContent(txt);
+    ruler.txt=Math.round(d)+' м · '+fmtDU(du);
     $('mr-d').textContent=Math.round(d)+' м';
     $('mr-a').textContent='дир. угол '+fmtDU(du)+' ('+(du/6000*360).toFixed(1)+'°)';
   }
@@ -2033,8 +2136,41 @@ function renderShots(t){
       <div class="mp-err" id="ms-err"></div>
       <button class="btn bp" onclick="MapMod.doSearch()">Найти на карте</button>`);
   }
+  // Строка действий с координатами: найти на карте / копировать / передать
+  const actRow=(x,y,title)=>{
+    const tx=encodeURIComponent(title+'\nX= '+x+'\nY= '+y);
+    return `<div class="mp-r3"><button class="btn bg" onclick="MapMod.find(${x},${y})">${ic('search')} На карте</button>
+      <button class="btn bg" onclick="MapMod.copyXY(this,'${tx}')">${ic('copy')} Копировать</button>
+      <button class="btn bg" onclick="MapMod.shareXY('${tx}')">${ic('send')} Передать</button></div>`;
+  };
+
+  function openOP(id){
+    const o=S.ops.find(x=>x.id===id); if(!o) return;
+    S.activeOpId=id; save(); refreshOther(); renderPanel(); draw(false);
+    showSheet(head('ОП '+esc(o.cs))+`
+      <div class="mp-r2"><div><lbl>ОТН</lbl><input id="ms-otn" type="text" inputmode="numeric" value="${esc(o.otn)}"></div>
+      <div><lbl>ОН</lbl><input id="ms-on" type="text" inputmode="numeric" value="${esc(o.on)}"></div></div>
+      <lbl>Позывной</lbl><input id="ms-cs" type="text" value="${esc(o.cs)}">
+      <div class="mp-err" id="ms-err"></div>
+      <button class="btn bp" onclick="MapMod.saveOP(${id})">Сохранить</button>
+      <div style="font-size:13px;margin-top:8px">X= <b>${o.x}</b> &nbsp; Y= <b>${o.y}</b></div>`+actRow(o.x,o.y,o.cs));
+  }
+
+  function openBurst(tid,idx){
+    const t=S.targets.find(x=>x.id===tid), sh=t&&t.shots[idx]; if(!sh) return;
+    const bx=Math.round(t.x+sh.dev.north), by=Math.round(t.y+sh.dev.east);
+    const sf=sh.sfM===0?'по дальности':(sh.sfM<0?'недолёт ':'перелёт ')+Math.abs(sh.sfM);
+    const dv=sh.dvM===0?'по направлению':(sh.dvM>0?'правее ':'левее ')+Math.abs(sh.dvM);
+    showSheet(head('Разрыв №'+sh.num+' · '+esc(targetLabel(t)))+`
+      <div style="font-size:14px;margin-bottom:6px"><b>${sf}, ${dv}</b>${sh.inDU!==undefined?` (дир. ${fmtDU(sh.inDU)}, ${sh.inM} м от цели)`:''}</div>
+      ${sh.uglNew!==undefined?`<div style="font-size:13px;color:var(--text2)">Угломер ${fmtDU(sh.uglNew)} · Прицел ${sh.pricelNew!==null?sh.pricelNew:'—'}${sh.chargeName?' · '+esc(sh.chargeName):''}</div>`:''}
+      <div style="font-size:13px;margin-top:6px">X= <b>${bx}</b> &nbsp; Y= <b>${by}</b></div>`
+      +actRow(bx,by,'Разрыв №'+sh.num)+
+      `<button class="btn bg" style="color:#d32f2f" onclick="MapMod.delShot(${idx})">${ic('trash')} Удалить разрыв</button>`);
+  }
+
   function sheetPoint(title,x,y){
-    showSheet(head(title)+`<div style="font-size:14px;margin-bottom:8px">X= <b>${x}</b> &nbsp; Y= <b>${y}</b></div>
+    showSheet(head(title)+`<div style="font-size:14px;margin-bottom:4px">X= <b>${x}</b> &nbsp; Y= <b>${y}</b></div>${actRow(x,y,title)}
       <div class="mp-r2"><button class="btn bp" onclick="MapMod.sheetTarget(${x},${y})">${ic('target')} Цель здесь</button>
       <button class="btn bg" onclick="MapMod.clearFound()">Убрать метку</button></div>`);
   }
@@ -2043,7 +2179,7 @@ function renderShots(t){
     S.active=id; save(); refreshOther(); renderPanel(); draw(false);
     const t=getAT(); if(!t) return;
     const cp=copters();
-    showSheet(head(esc(targetLabel(t)))+summaryHTML(t)+`
+    showSheet(head(esc(targetLabel(t)))+actRow(t.x,t.y,targetLabel(t))+`<button class="btn ${t.hit?'bp':'bg'}" style="margin:0 0 6px" onclick="MapMod.hit(${t.id})">${t.hit?'✓ Цель поражена — вернуть':'Цель поражена'}</button>`+summaryHTML(t)+`
       <lbl>Коптер (КНП) цели</lbl>
       <div style="display:flex;gap:8px"><select id="ms-cop" style="flex:1" onchange="MapMod.bind(this.value)">
         <option value="">— не привязан —</option>
@@ -2067,7 +2203,8 @@ function renderShots(t){
   function openCopter(id){
     const c=copters().find(x=>x.id===id); if(!c) return;
     const t=getAT();
-    showSheet(head('Коптер (КНП)')+`
+    const cxy=wgs84ToXY(c.lat,c.lon,c.h||0), cx=Math.round(cxy.x), cy=Math.round(cxy.y);
+    showSheet(head('Коптер (КНП)')+`<div style="font-size:13px">X= <b>${cx}</b> &nbsp; Y= <b>${cy}</b><br><span style="color:var(--text2)">${c.lat.toFixed(6)}, ${c.lon.toFixed(6)}</span></div>${actRow(cx,cy,c.name)}`+`
       <lbl>Название</lbl><input id="ms-name" type="text" value="${esc(c.name)}">
       <lbl>Высота, м</lbl><input id="ms-h" type="number" step="any" value="${c.h||''}">
       <div class="mp-err" id="ms-err"></div>
@@ -2092,6 +2229,30 @@ function renderShots(t){
     ruler(){ if(ruler) rulerStop(); else rulerStart(); },
     rulerReset(){ if(ruler){ rulerStop(); rulerStart(); } },
     rulerStop(){ rulerStop(); },
+    redraw(){ if(map) draw(false); },
+    find(x,y,fromList){
+      const go=()=>{
+        let p; try{ p=ll(x,y); }catch(e){ return; }
+        found={x,y}; draw(false);
+        map.flyTo(p, Math.max(map.getZoom(),17));
+        if(fromList) sheetPoint('Найдено',x,y);
+      };
+      if(!$('p-map').classList.contains('on')) this.open();
+      let n=0; const wait=()=>{ if(map) setTimeout(go,150); else if(n++<80) setTimeout(wait,100); };
+      wait();
+    },
+    copyXY(btn,tx){ copyCoord(btn, decodeURIComponent(tx)); },
+    shareXY(tx){
+      const text=decodeURIComponent(tx);
+      if(navigator.share) navigator.share({text}).catch(()=>{});
+      else fallbackCopy(text,()=>toast('Скопировано в буфер обмена'));
+    },
+    hit(id){ toggleHit(id); openTarget(id); },
+    saveOP(id){
+      const err=updateOP(id,{cs:$('ms-cs').value, otn:$('ms-otn').value, on:$('ms-on').value});
+      if(err){ $('ms-err').textContent=err; return; }
+      toast('ОП обновлена'); renderPanel(); openOP(id);
+    },
     shotOnMap(tid){ startPlace('shot',tid); },
     placeCenter(){ if(placing && map) applyPlace(map.getCenter()); },
     delTarget(id){
