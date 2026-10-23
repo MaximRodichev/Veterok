@@ -323,6 +323,8 @@ details.fold>summary{padding:12px 4px;font-size:15px}
 .mpage #mp-hint{left:128px;flex-wrap:wrap}
 .mpage #mp-ruler{right:118px}
 .hdr h1 img.logo{height:24px;width:auto;vertical-align:-5px;margin-right:6px}
+.sh-prev{background:var(--accent-bg);border-radius:10px;padding:8px 10px;margin:8px 0;font-size:14px;line-height:1.45}
+.sh-prev b{font-size:17px;color:var(--accent)}
 </style>
 </head>
 <body>
@@ -506,6 +508,16 @@ details.fold>summary{padding:12px 4px;font-size:15px}
   </div>
 </div>
 
+<div class="mdl" id="shedit"><div class="mdl-box"><p id="se-title">Разрыв</p>
+  <lbl>Отсчёт разрыва</lbl><select id="se-mode" onchange="seMode()"></select>
+  <div class="r2" id="se-row-opc"><div><lbl>Недолёт (−) / Перелёт (+), м</lbl><input id="se-sf" type="number" inputmode="numeric" oninput="seInput()"></div>
+    <div><lbl>Правее (+) / Левее (−), м</lbl><input id="se-dv" type="number" inputmode="numeric" oninput="seInput()"></div></div>
+  <div class="r2" id="se-row-tgt" style="display:none"><div><lbl>Дир. угол от цели</lbl><input id="se-du" type="text" inputmode="numeric" placeholder="40-16" oninput="seInput()"></div>
+    <div><lbl>Расстояние, м</lbl><input id="se-m" type="number" inputmode="numeric" oninput="seInput()"></div></div>
+  <div class="sh-prev" id="se-prev"></div>
+  <div class="msg err" id="se-err"></div>
+  <div class="r2"><button class="btn bg" onclick="closeShEdit()">Отмена</button><button class="btn bp" onclick="saveShEdit()">Сохранить</button></div>
+</div></div>
 <div class="mdl" id="opedit"><div class="mdl-box"><p>Изменить ОП</p>
   <lbl>Позывной</lbl><input id="oe-cs" type="text">
   <div class="r2"><div><lbl>ОТН</lbl><input id="oe-otn" type="text" inputmode="numeric" placeholder="35-52"></div><div><lbl>ОН</lbl><input id="oe-on" type="text" inputmode="numeric" placeholder="51-00"></div></div>
@@ -627,6 +639,7 @@ const ICONS = {
   warn:'<path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18v.5"/>',
   trash:'<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
   plus:'<path d="M12 5v14M5 12h14"/>',
+  edit:'<path d="M4 20l1-4L16.5 4.5a2 2 0 012.8 0l.2.2a2 2 0 010 2.8L8 19z"/><path d="M14 7l3 3"/>',
   mortar:'<path d="M9.2 3.2l4.6 1.8-4.6 11.2-4.6-1.8z"/><path d="M2.5 20.5h10M6 20.5l1.3-4M11 20.5l-2.3-3.8"/>',
   burst:'<path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M18.4 5.6l-2.8 2.8M8.4 15.6l-2.8 2.8"/><circle cx="12" cy="12" r="1.6"/>',
   ruler:'<path d="M3 17L17 3l4 4L7 21z"/><path d="M7 13l2 2M10 10l2 2M13 7l2 2"/>',
@@ -1611,6 +1624,93 @@ function toggleSum(){
   save(); renderFire();
   toast(S.sumShots!==false ? 'Разрывы суммируются' : 'Каждый разрыв считается заново');
 }
+// ---- Изменение разрыва с мгновенным пересчётом прицела именно для него ----
+// Считает поля разрыва из введённых значений (те же формулы, что в addShot)
+function shotFields(t, c, mode, v){
+  let sfM=v.sf, dvM=v.dv, tgtIn=null;
+  if(mode==='tgt'){
+    if(v.du===null||isNaN(v.du)||isNaN(v.m)||v.m<0) return {error:'Введите дир. угол (например 40-16) и расстояние в метрах'};
+    tgtIn={du:v.du,m:v.m};
+  } else if(isNaN(sfM)||isNaN(dvM)) return {error:'Заполните оба поля'};
+  let rs=null;
+  if(mode==='tgt'){
+    const a=duToRad(tgtIn.du), g=duToRad(c.dDU);
+    const n=tgtIn.m*Math.cos(a), e=tgtIn.m*Math.sin(a);
+    const along=n*Math.cos(g)+e*Math.sin(g), perp=-n*Math.sin(g)+e*Math.cos(g);
+    sfM=Math.round(along); dvM=Math.round(perp);
+    rs={basisDU:tgtIn.du, basisSrc:'цели', dev:{north:n,east:e,dist:tgtIn.m}, along, perp};
+  } else if(Hooks.resolveShot){
+    const prev=S.shotMode; S.shotMode=mode;
+    try{ rs=Hooks.resolveShot(t,c,sfM,dvM); } finally { S.shotMode=prev; }
+  }
+  if(rs && rs.error) return {error:rs.error};
+  if(!rs) rs={basisDU:c.dDU, basisSrc:'ОП', dev:calcDeviation(c.dDU,sfM,dvM), along:sfM, perp:dvM};
+  const distBurst=Math.hypot(c.dist+rs.along, rs.perp);
+  const angMiss=Math.round(Math.atan2(rs.perp, c.dist+rs.along)*6000/(2*Math.PI));
+  const dPr=priceRaw(distBurst,S.charge)-priceRaw(c.dist,S.charge);
+  return {sfM,dvM,dev:rs.dev,distBurst,basisDU:rs.basisDU,basisSrc:rs.basisSrc,
+    inDU:tgtIn?tgtIn.du:undefined, inM:tgtIn?tgtIn.m:undefined,
+    charge:S.charge, chargeName:TBL[S.charge].name, dirDU:c.dDU,
+    corrPApplied:Math.floor(-dPr+1e-9), corrPRaw:-dPr,
+    corrRangeApplied:-rs.along, corrUglApplied:-angMiss};
+}
+let _seIdx=null;
+function seVals(){
+  const g=i=>document.getElementById(i).value;
+  return {sf:parseFloat(g('se-sf')), dv:parseFloat(g('se-dv')), du:parseDU(g('se-du')), m:parseFloat(g('se-m'))};
+}
+function seMode(){
+  const tg=document.getElementById('se-mode').value==='tgt';
+  document.getElementById('se-row-tgt').style.display=tg?'':'none';
+  document.getElementById('se-row-opc').style.display=tg?'none':'';
+  seInput();
+}
+// Мгновенный пересчёт: показывает, что станет с угломером и прицелом именно этого разрыва
+function seInput(){
+  const t=getAT(); if(!t||_seIdx===null) return;
+  const prev=document.getElementById('se-prev'), err=document.getElementById('se-err');
+  err.textContent='';
+  const c=getOP()?calcTarget(t):null;
+  if(!c){ prev.textContent=''; return; }
+  const f=shotFields(t,c,document.getElementById('se-mode').value,seVals());
+  if(f.error){ prev.innerHTML='<span style="color:var(--text2)">'+f.error+'</span>'; return; }
+  const clone={...t, shots:t.shots.map(x=>({...x}))};
+  Object.assign(clone.shots[_seIdx], f);
+  rebuildShots(clone);
+  const n=clone.shots[_seIdx], o=t.shots[_seIdx];
+  prev.innerHTML='Угломер <b>'+fmtDU(n.uglNew)+'</b> &nbsp; Прицел <b>'+(n.pricelNew!==null?n.pricelNew:'—')+'</b>'
+    +'<br><span style="color:var(--text2);font-size:12px">было: '+fmtDU(o.uglNew)+' / '+(o.pricelNew!==null?o.pricelNew:'—')+
+    (_seIdx<t.shots.length-1?' · следующие разрывы пересчитаются':'')+'</span>';
+}
+function editShot(idx){
+  const t=getAT(), sh=t&&t.shots[idx]; if(!sh) return;
+  _seIdx=idx;
+  const sel=document.getElementById('se-mode');
+  sel.innerHTML=document.getElementById('sh-mode').innerHTML;
+  const mode=sh.basisSrc==='цели'?'tgt':(sh.basisSrc==='коптера'?'copter':'op');
+  sel.value=[...sel.options].some(o=>o.value===mode)?mode:'op';
+  document.getElementById('se-title').textContent='Разрыв №'+sh.num+' · '+targetLabel(t);
+  document.getElementById('se-sf').value=sh.sfM; document.getElementById('se-dv').value=sh.dvM;
+  document.getElementById('se-du').value=sh.inDU!==undefined?fmtDU(sh.inDU):'';
+  document.getElementById('se-m').value=sh.inM!==undefined?sh.inM:'';
+  document.getElementById('shedit').classList.add('on');
+  seMode();
+}
+function closeShEdit(){ document.getElementById('shedit').classList.remove('on'); _seIdx=null; }
+function saveShEdit(){
+  const t=getAT(); if(!t||_seIdx===null) return;
+  const c=getOP()?calcTarget(t):null;
+  if(!c){ document.getElementById('se-err').textContent='Выберите ОП'; return; }
+  const f=shotFields(t,c,document.getElementById('se-mode').value,seVals());
+  if(f.error){ document.getElementById('se-err').textContent=f.error; return; }
+  const num=t.shots[_seIdx].num;
+  Object.assign(t.shots[_seIdx], f);
+  rebuildShots(t); restoreCorr(t);
+  save(); closeShEdit(); renderFire(); renderTargets();
+  if(window.MapMod && MapMod.redraw) MapMod.redraw();
+  toast('Разрыв №'+num+' пересчитан');
+}
+
 function delShot(idx, done){
   const t=getAT();
   if(!t || !t.shots[idx]) return;
@@ -1702,7 +1802,7 @@ function renderShots(t){
         <div class="sh-t"><div class="l">Прицел</div><div class="v">${s.pricelNew!==null?s.pricelNew:'—'}</div><div class="s">${s.pricelShot!=null?'было '+s.pricelShot:'вне диап.'}</div></div>
       </div>` : '';
     return `<div class="sh-card ${i===0?'last':''}">
-      <div class="sh-h"><span class="sh-n">№${s.num}</span><span class="sh-chip">${sf}</span><span class="sh-chip">${dv}</span>${s.basisSrc&&s.basisSrc!=='ОП'?`<span class="sh-chip">от ${s.basisSrc}</span>`:''}${s.inDU!==undefined?`<span class="sh-chip">дир. ${fmtDU(s.inDU)} · ${s.inM} м</span>`:''}${s.chargeName?`<span class="sh-chip">зар. ${s.chargeName}</span>`:''}<button class="bxs d" style="margin-left:auto" onclick="delShot(${t.shots.length-1-i})">${ic('trash')}</button></div>
+      <div class="sh-h"><span class="sh-n">№${s.num}</span><span class="sh-chip">${sf}</span><span class="sh-chip">${dv}</span>${s.basisSrc&&s.basisSrc!=='ОП'?`<span class="sh-chip">от ${s.basisSrc}</span>`:''}${s.inDU!==undefined?`<span class="sh-chip">дир. ${fmtDU(s.inDU)} · ${s.inM} м</span>`:''}${s.chargeName?`<span class="sh-chip">зар. ${s.chargeName}</span>`:''}<button class="bxs" style="margin-left:auto" onclick="editShot(${t.shots.length-1-i})">${ic('edit')}</button><button class="bxs d" onclick="delShot(${t.shots.length-1-i})">${ic('trash')}</button></div>
       ${tiles}
       <div class="sh-f">Смещение от цели: ${fmtAxis(s.dev.north,'север','юг')} · ${fmtAxis(s.dev.east,'восток','запад')} · ${Math.round(s.dev.dist)} м</div>
     </div>`;
@@ -2192,7 +2292,7 @@ function renderShots(t){
       ${sh.uglNew!==undefined?`<div style="font-size:13px;color:var(--text2)">Угломер ${fmtDU(sh.uglNew)} · Прицел ${sh.pricelNew!==null?sh.pricelNew:'—'}${sh.chargeName?' · '+esc(sh.chargeName):''}</div>`:''}
       <div style="font-size:13px;margin-top:6px">X= <b>${bx}</b> &nbsp; Y= <b>${by}</b></div>`
       +actRow(bx,by,fmtBurst(t,sh))+
-      `<button class="btn bg" style="color:#d32f2f" onclick="MapMod.delShot(${idx})">${ic('trash')} Удалить разрыв</button>`);
+      `<div class="mp-r2"><button class="btn bg" onclick="MapMod.close();editShot(${idx})">${ic('edit')} Изменить</button><button class="btn bg" style="color:#d32f2f" onclick="MapMod.delShot(${idx})">${ic('trash')} Удалить</button></div>`);
   }
 
   function sheetPoint(title,x,y){
