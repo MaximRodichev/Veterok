@@ -325,6 +325,38 @@ details.fold>summary{padding:12px 4px;font-size:15px}
 .hdr h1 img.logo{height:24px;width:auto;vertical-align:-5px;margin-right:6px}
 .sh-prev{background:var(--accent-bg);border-radius:10px;padding:8px 10px;margin:8px 0;font-size:14px;line-height:1.45}
 .sh-prev b{font-size:17px;color:var(--accent)}
+
+#imp-ta{width:100%;border:1.5px solid var(--border);background:var(--surface2);border-radius:10px;padding:10px;font:13px/1.35 inherit;resize:vertical;min-height:110px;box-sizing:border-box}
+.imp-prev{margin:8px 0 10px;max-height:34vh;overflow:auto;font-size:13px}
+.imp-it{padding:6px 0;border-top:1px solid var(--border);line-height:1.35}
+.imp-it:first-child{border-top:none}
+.imp-t{display:inline-block;min-width:54px;margin-right:6px;font-size:11px;font-weight:800;color:var(--accent)}
+.imp-it.dup{opacity:.55}
+.imp-it.warn{color:var(--danger)}
+.imp-prev .mut{color:var(--text3)}
+#imp-go:disabled{opacity:.4}
+.sh2>span{display:inline-flex;align-items:center;gap:2px}
+
+/* ── батарея, данные ── */
+.bt-c{padding:9px 10px}
+.bt-c.sel{box-shadow:inset 3px 0 0 var(--accent)}
+.bt-h{display:flex;flex-wrap:wrap;align-items:center;gap:5px 8px;margin-bottom:6px}
+.bt-h b{font-size:16px}
+.bt-chip{font-size:12px;background:var(--surface2);border-radius:7px;padding:2px 7px;color:var(--text2)}
+.bt-chip.ok{background:#e1f2e3;color:#2e7d32;font-weight:700}
+.bt-chip.bad{background:#fdecea;color:#c62828;font-weight:700}
+.bt-f{font-size:12px;color:var(--text2);margin-top:6px;line-height:1.35}
+.bt-tbl{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:13.5px}
+.bt-tbl th{font-size:11px;color:var(--text2);font-weight:700;text-align:center;padding:2px 3px}
+.bt-tbl td{padding:7px 3px;border-top:1px solid var(--border);text-align:center}
+.bt-tbl td:first-child,.bt-tbl th:first-child{text-align:left}
+.bt-tbl tr.act td:first-child{color:var(--accent);font-weight:800}
+.dt-stat{font-size:13px;color:var(--text2);margin-bottom:8px}
+.dt-day{display:flex;align-items:center;gap:8px;background:var(--surface);border-radius:12px;padding:9px 10px;margin-bottom:6px}
+.dt-day .m{flex:1;min-width:0}
+.dt-day .m b{display:block;font-size:14px}
+.dt-day .m span{font-size:12px;color:var(--text2)}
+.dt-day .bxs{flex:none}
 </style>
 </head>
 <body>
@@ -343,6 +375,7 @@ details.fold>summary{padding:12px 4px;font-size:15px}
   <button class="menu-item" onclick="exportKML();toggleMenu()"><i data-ic="upload"></i> Экспорт целей в KML</button>
   <button class="menu-item" onclick="document.getElementById('kml-file').click()"><i data-ic="download"></i> Импорт целей из KML</button>
   <input type="file" id="kml-file" accept=".kml" style="display:none" onchange="importKMLFile(this);toggleMenu()">
+  <button class="menu-item" onclick="nav('dt');toggleMenu()"><i data-ic="download"></i> Данные, архив и PDF</button>
 </div>
 
 <!-- ═══ ОП ═══ -->
@@ -370,6 +403,7 @@ details.fold>summary{padding:12px 4px;font-size:15px}
 
   <div class="sh2">
     <h2>Огневые позиции <span class="badge" id="op-cnt">0</span></h2>
+    <button class="bxs a" onclick="impOpen()">Вставить</button>
   </div>
   <div id="op-list"><div class="empty">ОП не добавлены</div></div>
 
@@ -432,7 +466,7 @@ details.fold>summary{padding:12px 4px;font-size:15px}
 
   <div class="sh2">
     <h2>Цели <span class="badge" id="t-cnt">0</span></h2>
-    <button class="bxs d" onclick="clearTargets()">Очистить все</button>
+    <span><button class="bxs a" onclick="impOpen()">Вставить</button> <button class="bxs d" onclick="clearTargets()">Очистить все</button></span>
   </div>
   <div id="t-list"><div class="empty">Цели не добавлены</div></div>
 </div>
@@ -501,9 +535,9 @@ details.fold>summary{padding:12px 4px;font-size:15px}
 
     <div class="sh2">
       <h2>История разрывов</h2>
-      <button class="bxs d" onclick="clearShots()">Сбросить</button>
+      <span><button class="bxs a" onclick="impOpen()">Вставить</button> <button class="bxs a" onclick="exportPDF(S.active)">PDF</button> <button class="bxs d" onclick="clearShots()">Сбросить</button></span>
     </div>
-    <button class="btn bp" style="margin-top:0;margin-bottom:10px" onclick="copyAll(this)"><i data-ic="copy"></i> Копировать ОП + цель + разрывы</button>
+    <button class="btn bp" style="margin-top:0;margin-bottom:10px" onclick="copyAll(this)"><i data-ic="copy"></i> Копировать / передать: ОП + цель + разрывы</button>
     <div id="sh-list"><div class="empty">Разрывов нет</div></div>
   </div>
 </div>
@@ -526,6 +560,54 @@ details.fold>summary{padding:12px 4px;font-size:15px}
   <div class="r2"><button class="btn bg" onclick="closeOPEdit()">Отмена</button><button class="btn bp" onclick="saveOPEdit()">Сохранить</button></div>
 </div></div>
 <div class="mdl" id="mdl"><div class="mdl-box"><p id="mdl-txt"></p><div class="r2"><button class="btn bg" onclick="mdlClose(false)">Отмена</button><button class="btn bp" onclick="mdlClose(true)">Да</button></div></div></div>
+
+<!-- ═══ БАТАРЕЯ (пункт управления командира) ═══ -->
+<div class="page" id="p-bt">
+  <div class="sh2"><h2>Батарея <span class="badge" id="bt-cnt">0</span></h2>
+    <span><button class="bxs a" onclick="impOpen()">Вставить от расчёта</button></span></div>
+  <div class="card" style="padding:8px 10px">
+    <lbl style="margin-top:0">Цель</lbl>
+    <select id="bt-tg" onchange="_btSel=this.value;renderBattery()"></select>
+  </div>
+  <div id="bt-body"></div>
+  <div class="r2" style="margin-top:2px">
+    <button class="btn bg" onclick="btCopy(this)"><i data-ic="copy"></i> Сводка / передать</button>
+    <button class="btn bp" onclick="exportPDF(_btSel==='all'?'all':Number(_btSel))">PDF-журнал</button>
+  </div>
+  <p class="msg" style="text-align:center;color:var(--text3)">Каждая ОП — отдельный расчёт со своими разрывами. Нажмите на карточку, чтобы открыть расчёт на «Стрельбе». Данные расчёта можно вставить кнопкой сверху.</p>
+</div>
+
+<!-- ═══ ДАННЫЕ: резервные копии, архив по дням, PDF ═══ -->
+<div class="page" id="p-dt">
+  <div class="sh2"><h2>Данные и резервные копии</h2></div>
+  <div class="card">
+    <div class="ct">Сегодня · <span id="dt-today"></span></div>
+    <div id="dt-stat" class="dt-stat"></div>
+    <div class="r2">
+      <button class="btn bp" onclick="exportDayJSON()"><i data-ic="upload"></i> Выгрузить в файл</button>
+      <button class="btn bg" onclick="document.getElementById('dt-file').click()"><i data-ic="download"></i> Загрузить из файла</button>
+    </div>
+    <button class="btn bg" onclick="exportPDF('all')">PDF-журнал за день (все цели и ОП)</button>
+    <input type="file" id="dt-file" accept=".json,application/json" style="display:none" onchange="loadFileChosen(this)">
+  </div>
+  <div class="sh2"><h2>Архив по дням</h2></div>
+  <p class="msg" style="margin:0 2px 6px;color:var(--text3)">Копия сохраняется на этом устройстве автоматически при каждом изменении, хранятся последние 21 запись.</p>
+  <div id="dt-days"></div>
+</div>
+
+<div class="mdl" id="ldlg"><div class="mdl-box imp">
+  <p>Загрузка данных</p>
+  <div id="ld-info" class="imp-prev"></div>
+  <div class="r2"><button class="btn bg" onclick="ldClose()">Отмена</button><button class="btn bg" onclick="ldApply('merge')">Добавить к текущим</button></div>
+  <button class="btn bp" onclick="ldApply('replace')">Заменить всё</button>
+</div></div>
+
+<div class="mdl" id="impdlg"><div class="mdl-box imp">
+  <p>Вставить данные</p>
+  <textarea id="imp-ta" rows="6" placeholder="Вставьте текст: ОП, цель, разрывы, корректуру. Программа распознает сама (формат этого приложения и Ветерка)" oninput="impParse()"></textarea>
+  <div id="imp-prev" class="imp-prev"></div>
+  <div class="r2"><button class="btn bg" onclick="impClose()">Отмена</button><button class="btn bp" id="imp-go" onclick="impApply()" disabled>Импортировать</button></div>
+</div></div>
 <div class="toast" id="toast"></div>
 
 <!-- Bottom nav -->
@@ -535,6 +617,9 @@ details.fold>summary{padding:12px 4px;font-size:15px}
   </button>
   <button class="nb" id="nb-tg" onclick="nav('tg')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>Цели
+  </button>
+  <button class="nb" id="nb-bt" onclick="nav('bt')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="6" r="2.6"/><circle cx="5.5" cy="17" r="2.6"/><circle cx="18.5" cy="17" r="2.6"/><path d="M12 8.6v3.2M9.5 13.5l-2.3 1.6M14.5 13.5l2.3 1.6"/></svg>Батарея
   </button>
   <button class="nb" id="nb-fi" onclick="nav('fi')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z"/></svg>Стрельба
@@ -619,7 +704,26 @@ if(S.op){ // миграция со старой версии (одна ОП бе
   delete S.op;
 }
 if(S.activeOpId===undefined) S.activeOpId=null;
-function save(){ try{localStorage.setItem('ac3',JSON.stringify(S));}catch(e){} }
+// t.shots — это разрывы АКТИВНОЙ ОП (ссылка на t.byOp[id]); у каждой ОП (расчёта) своя история и свои поправки
+function serS(o){ return JSON.stringify(o,function(k,v){ return (k==='shots' && this && this.byOp) ? undefined : v; }); }
+function opAlias(t){
+  const id=S.activeOpId;
+  if(!t.byOp){
+    if(id==null){ if(!t.shots) t.shots=[]; return; }
+    t.byOp={}; t.byOp[id]=t.shots||[];                 // старые разрывы достаются активной ОП
+  } else {
+    if(id==null){ if(!t.shots) t.shots=[]; return; }
+    if(!t.byOp[id]) t.byOp[id]=[];
+  }
+  t.shots=t.byOp[id];
+}
+function syncOpCtx(){
+  S.targets.forEach(t=>{
+    const had=t.shots; opAlias(t);
+    if(t.shots!==had && getOP()){ try{ rebuildShots(t); restoreCorr(t); }catch(e){} }
+  });
+}
+function save(){ syncOpCtx(); try{localStorage.setItem('ac3',serS(S));}catch(e){} dayArchive(); }
 function getOP(){ return S.ops.find(o=>o.id===S.activeOpId)||null; }
 
 // Иконки (SVG вместо эмодзи)
@@ -944,15 +1048,17 @@ function toggleMenu(){
 
 function nav(p){
   if(Hooks.onNav) Hooks.onNav(p);
-  ['op','tg','fi'].forEach(x=>{
+  ['op','tg','fi','bt','dt'].forEach(x=>{
     document.getElementById('p-'+x).classList.toggle('on', x===p);
-    document.getElementById('nb-'+x).classList.toggle('on', x===p);
+    const nb=document.getElementById('nb-'+x); if(nb) nb.classList.toggle('on', x===p);
   });
   document.querySelectorAll('.hdr .tb').forEach(b=>{
     b.classList.toggle('on', b.getAttribute('onclick')===`nav('${p}')`);
   });
   if(p==='tg') renderTargets();
   if(p==='fi') renderFire();
+  if(p==='bt') renderBattery();
+  if(p==='dt') renderData();
 }
 
 // ══════════════════════════════════════════════════
@@ -1054,6 +1160,7 @@ function selOP(id){
 function delOP(id){
   askConfirm('Удалить эту ОП?', ()=>{
     S.ops=S.ops.filter(o=>o.id!==id);
+    S.targets.forEach(t=>{ if(t.byOp) delete t.byOp[id]; });
     if(S.activeOpId===id) S.activeOpId=null;
     save();
     renderOPResult();
@@ -1098,7 +1205,7 @@ function renderOPList(){
 
 // Смена заряда: прицел пересчитывается во всех разрывах и установках.
 // Геометрия разрыва (дальность до разрыва, угловая поправка) от заряда не зависит, меняются только прицелы.
-function recalcAllShots(){
+function _recalcCur(){
   if(!getOP()) return 0;
   const nm=TBL[S.charge].name;
   let n=0;
@@ -1118,6 +1225,16 @@ function recalcAllShots(){
   return n;
 }
 
+// Смена заряда пересчитывает разрывы ВСЕХ ОП (у каждой свои поправки)
+function recalcAllShots(){
+  if(!getOP()) return 0;
+  const keep=S.activeOpId; let n=0;
+  S.ops.forEach(o=>{ S.activeOpId=o.id; S.targets.forEach(opAlias); n+=_recalcCur(); });
+  S.activeOpId=keep; S.targets.forEach(opAlias);
+  S.targets.forEach(t=>{ try{ restoreCorr(t); }catch(e){} });
+  return n;
+}
+
 function saveCharge(){
   const old=S.charge;
   S.charge = document.getElementById('charge').value;
@@ -1129,7 +1246,565 @@ function saveCharge(){
   renderFire();
 }
 
+
+// ══════════════════════════════════════════════════════════════════════════
+// ВСТАВКА ДАННЫХ: распознаёт ОП, цели, разрывы и корректуры из текста
+// (формат этого приложения: «ОП:/Цель:/№1: недолёт…», формат Ветерка: «Разрыв 1 …/X= /Y= /(Xц=…)»)
+// ══════════════════════════════════════════════════════════════════════════
+const _ye = v => String(v).toLowerCase().replace(/ё/g,'е');
+function chargeKeyByName(n){ n=_ye(n).trim(); return Object.keys(TBL).find(k=>_ye(TBL[k].name)===n)||null; }
+function parseTName(raw){
+  const s=String(raw||'').replace(/[«»"“”]/g,'').trim();
+  let m=/^Ц-?\s*(\d+)\s+(.+)$/i.exec(s)||/^Цель\s+(\d+)\s+(.+)$/i.exec(s);
+  if(m) return {num:parseInt(m[1]),type:m[2].trim().toUpperCase()};
+  m=/^(\d+)\s+(.+)$/.exec(s);
+  if(m) return {num:parseInt(m[1]),type:m[2].trim().toUpperCase()};
+  m=/^(?:Цель|Ц)\s*-?\s*(\d+)$/i.exec(s);
+  if(m) return {num:parseInt(m[1]),type:'ЦЕЛЬ'};
+  return {num:null,type:(s||'ЦЕЛЬ').toUpperCase()};
+}
+const _okXY = v => v!==null && Math.abs(v)>=1000000 && Math.abs(v)<=9999999;
+function _lineFields(l){
+  const f={}, g=(re)=>{const m=re.exec(l); return m?m[1]:null;};
+  let v;
+  if((v=g(/(?:^|[\s(,;])[XХ]\s*[=:]\s*(-?\d{6,8})/i))!==null) f.x=+v;
+  if((v=g(/(?:^|[\s(,;])[YУ]\s*[=:]\s*(-?\d{6,8})/i))!==null) f.y=+v;
+  if((v=g(/[XХ]ц\s*[=:]\s*(-?\d{6,8})/i))!==null) f.xc=+v;
+  if((v=g(/[YУ]ц\s*[=:]\s*(-?\d{6,8})/i))!==null) f.yc=+v;
+  if((v=g(/(?:^|[\s(,;])[HН]\s*=\s*(-?\d+)/))!==null) f.h=+v;
+  if((v=g(/ОТН\s*[=:]\s*([+-]?\d+(?:-\d+)?)/i))!==null) f.otn=v;
+  if((v=g(/(?:^|[\s,;])ОН\s*[=:]\s*([+-]?\d+(?:-\d+)?)/i))!==null) f.on=v;
+  if((v=g(/Заряд\s*[:=]\s*([А-Яа-яЁё]+)/i))!==null) f.charge=v;
+  if((v=g(/Фронт\s*=\s*(\d+)/i))!==null) f.front=+v;
+  if((v=g(/Глубина\s*=\s*(\d+)/i))!==null) f.depth=+v;
+  const d=/Отклонение[^:]*:\s*([СЮ])\s*:?\s*(\d+)\s*[,;]?\s*([ВЗ])\s*:?\s*(\d+)/i.exec(l);
+  if(d) f.dev={north:(/С/i.test(d[1])?1:-1)*(+d[2]), east:(/В/i.test(d[3])?1:-1)*(+d[4])};
+  if(f.x===undefined && f.y===undefined && !/[:=]/.test(l)){            // «5176404 5705744»
+    const n=l.match(/\b\d{7}\b/g); if(n&&n.length===2){ f.x=+n[0]; f.y=+n[1]; }
+  }
+  return f;
+}
+function _histLine(rest){
+  const o={}; const r=_ye(rest);
+  let m;
+  if(/по дальности/.test(r)) o.sf=0;
+  else if((m=/недолет\s*(\d+(?:[.,]\d+)?)/.exec(r))) o.sf=-parseFloat(m[1].replace(',','.'));
+  else if((m=/перелет\s*(\d+(?:[.,]\d+)?)/.exec(r))) o.sf=parseFloat(m[1].replace(',','.'));
+  if(/по направлению/.test(r)) o.dv=0;
+  else if((m=/правее\s*(\d+(?:[.,]\d+)?)/.exec(r))) o.dv=parseFloat(m[1].replace(',','.'));
+  else if((m=/левее\s*(\d+(?:[.,]\d+)?)/.exec(r))) o.dv=-parseFloat(m[1].replace(',','.'));
+  if((m=/\(дир\.?\s*(\d+-\d+)[,\s]+(\d+(?:[.,]\d+)?)\s*м\)/.exec(r))){ o.du=parseDU(m[1]); o.m=parseFloat(m[2].replace(',','.')); }
+  if((m=/\(разрыв\s*x\s*=\s*(\d{7})[,;\s]+y\s*=\s*(\d{7})\)/.exec(r))){ o.bx=+m[1]; o.by=+m[2]; }
+  if((m=/\[от\s+([^\]]+)\]/.exec(r))) o.from=m[1];
+  if((m=/\(заряд\s+([^)]+)\)/.exec(r))) o.charge=m[1];
+  return o;
+}
+
+// Текст → план (ничего не меняет в данных)
+function impPlan(text){
+  const P={ops:[],targets:[],shots:[],notes:[],charge:null};
+  const blocks=[]; let cur=null, lastTarget=null;
+  const start=(kind,o)=>{ cur=Object.assign({kind},o); blocks.push(cur); if(kind==='target') lastTarget=cur; return cur; };
+  text.split(/\r?\n/).forEach(raw=>{
+    const l=raw.replace(/^[\s•\-–*]+/,'').trim(); if(!l) return;
+    let m;
+    if(cur && cur.kind==='corr'){                         // внутри «Корректура № …»
+      if((m=/^Цель\s*:\s*(.+)$/i.exec(l))){ cur.tname=m[1]; return; }
+      if((m=/^Огневая позиция\s*:\s*(.+)$/i.exec(l))){ cur.opcs=m[1].trim(); return; }
+      const f=_lineFields(l); if(f.dev){ cur.dev=f.dev; return; }
+      if(/^(Прицел|Доворот|Угломер|Дир|Время|2Б11)/i.test(l)) return;
+    }
+    if(/^Корректура\s*№/i.test(l)){ start('corr',{}); return; }
+    if((m=/^(?:ОП|Огневая позиция)\s*[:\s]\s*(.+)$/i.exec(l))){
+      if(/не выбрана/i.test(m[1])){ cur=null; return; }
+      start('op',{cs:m[1].trim()}); return; }
+    if((m=/^Разрыв\s+(\d+)\s*(.*)$/i.exec(l))){ start('burst',{num:+m[1],label:m[2]}); return; }
+    if((m=/^№\s*(\d+)\s*:\s*(.+)$/.exec(l))){
+      const h=_histLine(m[2]);
+      if(h.sf!==undefined||h.du!==undefined||h.bx!==undefined) blocks.push({kind:'hist',num:+m[1],h,tb:lastTarget}); 
+      return; }
+    if((m=/^Цель\s*[:\s]\s*(.+)$/i.exec(l)) && !/^Цели?\s*(поражена|не)/i.test(l)){ start('target',{raw:m[1]}); return; }
+    if(/^(Разрывы|Расч[её]т по цели|Итог|Разрывов нет)/i.test(l)) { if(/^Расч[её]т|^Итог/i.test(l)) return; return; }
+    const f=_lineFields(l);
+    if(!Object.keys(f).length) return;
+    if(!cur){ start('target',{raw:''}); }
+    if(f.charge && !(cur.kind==='burst')) { const k=chargeKeyByName(f.charge); if(k) P.charge=k; }
+    Object.keys(f).forEach(k=>{ if(k!=='charge' && cur[k]===undefined) cur[k]=f[k]; });
+  });
+
+  // ОП
+  blocks.filter(b=>b.kind==='op').forEach(b=>{
+    if(!_okXY(b.x)||!_okXY(b.y)){ P.notes.push(`ОП «${b.cs}»: нет координат X/Y — пропущена`); return; }
+    if(!b.otn||!b.on||parseDU(b.otn)===null||parseDU(b.on)===null){ P.notes.push(`ОП «${b.cs}»: нет ОТН/ОН — пропущена`); return; }
+    const dup=S.ops.find(o=>o.cs===b.cs&&o.x===b.x&&o.y===b.y);
+    P.ops.push({cs:b.cs,x:b.x,y:b.y,otn:b.otn,on:b.on,dup:!!dup});
+  });
+  // цели (явные)
+  const addT=(x,y,raw,extra)=>{
+    let t=P.targets.find(q=>q.x===x&&q.y===y);
+    if(!t){ const nm=parseTName(raw); t=Object.assign({x,y,type:nm.type,num:nm.num,dup:!!S.targets.find(q=>q.x===x&&q.y===y)},extra||{}); P.targets.push(t); }
+    return t;
+  };
+  const tmap=new Map();
+  blocks.filter(b=>b.kind==='target').forEach(b=>{
+    if(!_okXY(b.x)||!_okXY(b.y)){ if(b.x!==undefined||b.y!==undefined||b.raw) P.notes.push(`Цель «${b.raw||'?'}»: нет координат — пропущена`); return; }
+    tmap.set(b,addT(b.x,b.y,b.raw,{h:b.h,front:b.front,depth:b.depth}));
+  });
+  const findByLabel=(label)=>{
+    if(!label) return null; const nm=parseTName(label);
+    if(nm.num===null) return null;
+    const ex=S.targets.find(t=>t.num===nm.num && _ye(t.type||'')===_ye(nm.type));
+    return ex?{x:ex.x,y:ex.y,ex:true}:null;
+  };
+  const pushShot=(tx,ty,spec,label,num)=>P.shots.push({tx,ty,spec,label,num});
+  const refOf=(tx,ty)=>`${tx},${ty}`;
+  blocks.forEach(b=>{
+    if(b.kind==='burst'){
+      let tx=b.xc, ty=b.yc;
+      if(!_okXY(tx)||!_okXY(ty)){ const lb=findByLabel(b.label); if(lb){tx=lb.x;ty=lb.y;} else if(lastTarget&&tmap.get(lastTarget)){tx=tmap.get(lastTarget).x;ty=tmap.get(lastTarget).y;} else { const a=getAT(); if(a){tx=a.x;ty=a.y;} } }
+      if(!_okXY(tx)||!_okXY(ty)){ P.notes.push(`Разрыв ${b.num}: неизвестно, к какой цели относится`); return; }
+      if(!_okXY(b.x)||!_okXY(b.y)){ P.notes.push(`Разрыв ${b.num}: нет координат`); return; }
+      if(!S.targets.find(q=>q.x===tx&&q.y===ty)) addT(tx,ty,b.label,{});
+      pushShot(tx,ty,{kind:'dev',north:b.x-tx,east:b.y-ty},b.label,b.num);
+    } else if(b.kind==='hist'){
+      let tg=b.tb&&tmap.get(b.tb); let tx,ty;
+      if(tg){tx=tg.x;ty=tg.y;} else { const a=getAT(); if(a){tx=a.x;ty=a.y;} }
+      if(tx===undefined){ P.notes.push(`Разрыв №${b.num}: нет цели`); return; }
+      const h=b.h;
+      if(h.bx!==undefined) pushShot(tx,ty,{kind:'dev',north:h.bx-tx,east:h.by-ty,charge:h.charge},'',b.num);
+      else if(h.du!==undefined&&h.du!==null) pushShot(tx,ty,{kind:'tgt',du:h.du,m:h.m,charge:h.charge},'',b.num);
+      else if(h.sf!==undefined&&h.dv!==undefined){ pushShot(tx,ty,{kind:'ang',sf:h.sf,dv:h.dv,from:h.from,charge:h.charge},'',b.num);
+        if(h.from && !P.notes.some(n=>/без координат/.test(n))) P.notes.push('Разрывы «от '+h.from+'» без координат: считаются от ОП, результат может отличаться. Заново скопируйте из обновлённого приложения — там координаты есть.'); }
+      else P.notes.push(`Разрыв №${b.num}: не хватает данных`);
+    } else if(b.kind==='corr'){
+      if(!b.dev){ P.notes.push('Корректура: нет строки «Отклонение по с/с»'); return; }
+      let tx,ty; const lb=findByLabel(b.tname);
+      if(lb){tx=lb.x;ty=lb.y;} else { const a=getAT(); if(a){tx=a.x;ty=a.y;} }
+      if(tx===undefined){ P.notes.push('Корректура: цель не найдена'); return; }
+      pushShot(tx,ty,{kind:'dev',north:b.dev.north,east:b.dev.east},b.tname||'',null);
+    }
+  });
+  // одиночные координаты без заголовка → цель
+  return P;
+}
+function _specDesc(sp){
+  if(sp.kind==='dev'){ const n=Math.round(sp.north), e=Math.round(sp.east); return `от цели: ${n>=0?'С':'Ю'}${Math.abs(n)} м, ${e>=0?'В':'З'}${Math.abs(e)} м`; }
+  if(sp.kind==='tgt') return `от цели: дир. ${fmtDU(sp.du)}, ${Math.round(sp.m)} м`;
+  return `${sp.sf===0?'по дальности':(sp.sf<0?'недолёт ':'перелёт ')+Math.abs(sp.sf)}, ${sp.dv===0?'по направлению':(sp.dv>0?'правее ':'левее ')+Math.abs(sp.dv)}`+(sp.from?` (от ${sp.from} → принято от ОП)`:'');
+}
+let _impPlan=null;
+function impParse(){
+  const txt=document.getElementById('imp-ta').value;
+  const prev=document.getElementById('imp-prev'), go=document.getElementById('imp-go');
+  if(!txt.trim()){ prev.innerHTML=''; go.disabled=true; _impPlan=null; return; }
+  const P=_impPlan=impPlan(txt);
+  const rows=[];
+  P.ops.forEach(o=>rows.push(`<div class="imp-it ${o.dup?'dup':''}"><span class="imp-t">ОП</span><b>${o.cs}</b> <span class="mut">X ${o.x} · Y ${o.y} · ОТН ${o.otn} · ОН ${o.on}${o.dup?' · уже есть':''}</span></div>`));
+  if(P.charge) rows.push(`<div class="imp-it"><span class="imp-t">ЗАРЯД</span><b>${TBL[P.charge].name}</b>${P.charge!==S.charge?' <span class="mut">· будет выбран</span>':''}</div>`);
+  P.targets.forEach(t=>rows.push(`<div class="imp-it ${t.dup?'dup':''}"><span class="imp-t">ЦЕЛЬ</span><b>${t.num!==null?'Ц-'+t.num+' ':''}${t.type}</b> <span class="mut">X ${t.x} · Y ${t.y}${t.dup?' · уже есть':''}</span></div>`));
+  P.shots.forEach(sh=>rows.push(`<div class="imp-it"><span class="imp-t">РАЗРЫВ</span>${sh.num!==null?'№'+sh.num+' ':''}<span class="mut">${_specDesc(sh.spec)}</span></div>`));
+  P.notes.forEach(n=>rows.push(`<div class="imp-it warn"><span class="imp-t">⚠</span>${n}</div>`));
+  const any=P.ops.length||P.targets.length||P.shots.length;
+  if(!rows.length) rows.push('<div class="imp-it warn">Ничего не распознано. Нужны строки вида «X= 5176404», «Y= 5705744», «ОП: …», «Разрыв 1 …» или «№1: недолёт 50, правее 20».</div>');
+  prev.innerHTML=rows.join('');
+  go.disabled=!any;
+}
+function impClose(){ document.getElementById('impdlg').classList.remove('on'); _impPlan=null; }
+async function impOpen(){
+  const ta=document.getElementById('imp-ta'); ta.value='';
+  document.getElementById('imp-prev').innerHTML=''; document.getElementById('imp-go').disabled=true;
+  document.getElementById('impdlg').classList.add('on');
+  try{
+    if(navigator.clipboard && navigator.clipboard.readText){
+      const t=await navigator.clipboard.readText();
+      if(t && t.trim()){ ta.value=t; impParse(); }
+    }
+  }catch(e){ /* нет доступа к буферу — вставьте текст в поле вручную */ }
+  if(!ta.value) ta.focus();
+}
+function impApply(){
+  const P=_impPlan; if(!P) return;
+  let nOp=0,nT=0,nS=0,skip=0;
+  // заряд
+  if(P.charge && P.charge!==S.charge){ document.getElementById('charge').value=P.charge; saveCharge(); }
+  // ОП
+  P.ops.forEach((o,i)=>{
+    let ex=S.ops.find(q=>q.cs===o.cs&&q.x===o.x&&q.y===o.y);
+    if(!ex){ ex={id:Date.now()+i,cs:o.cs,x:o.x,y:o.y,otn:o.otn,on:o.on}; S.ops.push(ex); nOp++; }
+    S.activeOpId=ex.id;
+  });
+  // цели
+  S.targets.forEach(opAlias);
+  const get=(x,y)=>S.targets.find(q=>q.x===x&&q.y===y);
+  P.targets.forEach((p,i)=>{
+    if(get(p.x,p.y)) return;
+    let num=p.num;
+    if(num===null||S.targets.some(q=>String(q.num)===String(num))) num=(S.tgNum||0)+1;
+    S.tgNum=Math.max(S.tgNum||0,num);
+    const t={id:Date.now()+100+i,num,name:`Цель ${num} ${p.type}`,type:p.type,x:p.x,y:p.y,shots:[],corrUgl:0,corrRange:0};
+    if(p.h) t.h=p.h; if(p.front) t.front=p.front; if(p.depth) t.depth=p.depth;
+    S.targets.push(t); nT++;
+  });
+  S.targets.forEach(opAlias);   // у новых целей — пустой список разрывов активной ОП
+  // разрывы
+  const touched=new Set();
+  const shots=[...P.shots].sort((a,b)=>(a.num||0)-(b.num||0));
+  shots.forEach(sh=>{
+    const t=get(sh.tx,sh.ty); if(!t){ skip++; return; }
+    if(!getOP()){ skip++; return; }
+    const c=calcTarget(t); if(!c){ skip++; return; }
+    const ch=S.charge;
+    const g=impGeom(c,sh.spec,ch);
+    if(!g){ skip++; return; }
+    // дубль: тот же разрыв уже записан
+    const bx=Math.round(t.x+g.dev.north), by=Math.round(t.y+g.dev.east);
+    if(t.shots.some(q=>Math.round(t.x+q.dev.north)===bx && Math.round(t.y+q.dev.east)===by)){ skip++; return; }
+    t.shots.push({num:t.shots.length+1, sfM:g.sfM, dvM:g.dvM, dev:g.dev, distBurst:g.distBurst, inDU:g.inDU, inM:g.inM,
+      ts:Date.now(), charge:g.charge, chargeName:g.chargeName, corrPApplied:g.corrPApplied, corrPRaw:g.corrPRaw, dirDU:c.dDU,
+      basisDU:g.basisDU, basisSrc:g.basisSrc, corrRangeApplied:g.corrRangeApplied, corrUglApplied:g.corrUglApplied});
+    touched.add(t); nS++;
+  });
+  touched.forEach(t=>{ rebuildShots(t); restoreCorr(t); });
+  // активной делаем цель последнего разрыва / последнюю добавленную
+  const last = shots.length ? get(shots[shots.length-1].tx,shots[shots.length-1].ty) : (P.targets.length?get(P.targets[P.targets.length-1].x,P.targets[P.targets.length-1].y):null);
+  if(last) S.active=last.id;
+  save();
+  impClose();
+  renderOPResult(); renderOPList(); renderTargets(); renderFire();
+  const parts=[]; if(nOp) parts.push('ОП: '+nOp); if(nT) parts.push('целей: '+nT); if(nS) parts.push('разрывов: '+nS);
+  toast((parts.length?'Импортировано — '+parts.join(', '):'Новых данных нет')+(skip?' · пропущено: '+skip:''));
+  if(document.getElementById('p-bt').classList.contains('on')) renderBattery();
+  else if(last) nav('fi');
+}
+
+// Геометрия и поправки разрыва для импорта (те же формулы, что в addShot)
+function impGeom(c,sp,ch){
+  let along,perp,dev,basisDU,basisSrc,inDU,inM,sfM,dvM;
+  if(sp.kind==='ang'){
+    sfM=sp.sf; dvM=sp.dv; basisSrc='ОП'; basisDU=c.dDU; dev=calcDeviation(c.dDU,sfM,dvM); along=sfM; perp=dvM;
+  } else {
+    let du,m;
+    if(sp.kind==='dev'){
+      du=Math.atan2(sp.east,sp.north)*6000/(2*Math.PI); if(du<0) du+=6000;
+      m=Math.hypot(sp.north,sp.east);
+      du=Math.round(du*100)/100; m=Math.round(m*10)/10;      // округление до 0,05 м — для аккуратного показа
+    } else { du=sp.du; m=sp.m; }
+    const ar=duToRad(du), g=duToRad(c.dDU);
+    const n=m*Math.cos(ar), e=m*Math.sin(ar);
+    along= n*Math.cos(g)+e*Math.sin(g); perp=-n*Math.sin(g)+e*Math.cos(g);
+    sfM=Math.round(along); dvM=Math.round(perp); dev={north:n,east:e,dist:m};
+    basisDU=du; basisSrc='цели'; inDU=du; inM=m;
+  }
+  const distBurst=Math.hypot(c.dist+along, perp);
+  const dPr=priceRaw(distBurst,ch)-priceRaw(c.dist,ch);
+  return {sfM,dvM,dev,basisDU,basisSrc,inDU,inM,distBurst,charge:ch,chargeName:TBL[ch].name,
+    corrRangeApplied:-along,
+    corrUglApplied:-Math.round(Math.atan2(perp,c.dist+along)*6000/(2*Math.PI)),
+    corrPApplied:Math.floor(-dPr+1e-9), corrPRaw:-dPr};
+}
+
+
+// ══════════════════════════════════════════════════════════════════════════
+// БАТАРЕЯ: расчёты всех ОП по выбранной цели (пункт управления командира)
+// ══════════════════════════════════════════════════════════════════════════
+let _btSel=null;
+const ymd = (d)=>{ d=d||new Date(); const p=n=>String(n).padStart(2,'0'); return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate()); };
+const hm = (ts)=>{ if(!ts) return '—'; const d=new Date(ts), p=n=>String(n).padStart(2,'0'); return p(d.getHours())+':'+p(d.getMinutes()); };
+function shotText(s){
+  const sf = s.sfM===0 ? 'по дальности' : (s.sfM<0?'недолёт ':'перелёт ')+Math.abs(s.sfM);
+  const dv = s.dvM===0 ? 'по направлению' : (s.dvM>0?'правее ':'левее ')+Math.abs(s.dvM);
+  return sf+', '+dv+(s.inDU!==undefined?' (от цели: дир. '+fmtDU(s.inDU)+', '+(Math.round(s.inM*10)/10)+' м)':'');
+}
+// Расчёт для заданной ОП без изменения состояния приложения
+function opCalc(op,t){
+  const keep=S.activeOpId;
+  try{
+    S.activeOpId=op.id;
+    const shots=(t.byOp&&t.byOp[op.id]) || (op.id===keep?(t.shots||[]):[]);
+    const tmp=Object.assign({},t,{shots,corrUgl:0,corrRange:0,corrP:0});
+    restoreCorr(tmp); rebuildShots(tmp);
+    const c=calcTarget(tmp); const eff=c?calcEffective(tmp,c):null;
+    return {op,c,eff,shots,tmp};
+  } finally { S.activeOpId=keep; }
+}
+function btCurTarget(){
+  if(_btSel===null || (_btSel!=='all' && !S.targets.find(t=>String(t.id)===String(_btSel)))) _btSel = S.active? String(S.active) : (S.targets.length?'all':'all');
+  return _btSel==='all'?null:S.targets.find(t=>String(t.id)===String(_btSel));
+}
+function renderBattery(){
+  document.getElementById('bt-cnt').textContent=S.ops.length;
+  const sel=document.getElementById('bt-tg'); const t=btCurTarget();
+  sel.innerHTML='<option value="all">Все цели — сводка</option>'+S.targets.map(x=>`<option value="${x.id}">${targetLabel(x)}${x.hit?' ✓':''}</option>`).join('');
+  sel.value=_btSel;
+  const body=document.getElementById('bt-body');
+  if(!S.ops.length){ body.innerHTML='<div class="empty">Добавьте огневые позиции (расчёты) во вкладке «ОП»</div>'; return; }
+  if(!S.targets.length){ body.innerHTML='<div class="empty">Добавьте цель во вкладке «Цели»</div>'; return; }
+  if(!t){
+    body.innerHTML=S.targets.map(tg=>{
+      const rows=S.ops.map(op=>opCalc(op,tg)).filter(r=>r.c).map(r=>{
+        const f=r.eff.fire;
+        return `<tr class="${r.op.id===S.activeOpId?'act':''}" onclick="btOpen(${r.op.id},${tg.id})"><td>${r.op.cs}</td><td>${Math.round(r.c.dist)}</td><td><b>${fmtDU(r.eff.uglDU)}</b></td><td><b>${f?f.pricel:'—'}</b></td><td>${r.shots.length}</td></tr>`;
+      }).join('');
+      return `<div class="card bt-c"><div class="bt-h"><b>${targetLabel(tg)}</b>${tg.hit?'<span class="bt-chip ok">поражена</span>':''}<span class="bt-chip">X ${tg.x} · Y ${tg.y}</span></div>
+        <table class="bt-tbl"><thead><tr><th>ОП</th><th>Д, м</th><th>Угломер</th><th>Прицел</th><th>Разр.</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+    }).join('');
+    return;
+  }
+  body.innerHTML=S.ops.map(op=>{
+    const r=opCalc(op,t); if(!r.c) return '';
+    const f=r.eff.fire, n=r.shots.length, last=n?r.shots[n-1]:null;
+    return `<div class="card bt-c ${op.id===S.activeOpId?'sel':''}" onclick="btOpen(${op.id},${t.id})">
+      <div class="bt-h"><b>${op.cs}</b><span class="bt-chip">Д ${Math.round(r.c.dist)} м</span><span class="bt-chip">α ${fmtDU(r.c.dDU)}</span>
+        ${t.hit?'<span class="bt-chip ok">цель поражена</span>':''}${f?'':'<span class="bt-chip bad">вне диапазона заряда</span>'}</div>
+      <div class="sh-g">
+        <div class="sh-t"><div class="l">Угломер</div><div class="v">${fmtDU(r.eff.uglDU)}</div><div class="s">нач. ${fmtDU(r.c.uglDU)}</div></div>
+        <div class="sh-t"><div class="l">Прицел</div><div class="v">${f?f.pricel:'—'}</div><div class="s">${r.c.fire?'нач. '+r.c.fire.pricel:''}</div></div>
+        <div class="sh-t"><div class="l">Доворот</div><div class="v">${fmtDU(r.eff.dovDU)}</div><div class="s">${f?'t '+f.time+' с':''}</div></div>
+      </div>
+      <div class="bt-f">Разрывов: <b>${n}</b>${last?' · последний №'+last.num+' в '+hm(last.ts)+': '+shotText(last):' · ещё не стреляли'}</div>
+    </div>`;
+  }).join('') || '<div class="empty">Нет расчёта: проверьте координаты ОП</div>';
+}
+function btOpen(opId,tId){
+  S.activeOpId=opId; S.active=tId; save();
+  renderOPResult(); renderOPList(); renderTargets(); nav('fi');
+}
+function batteryText(t){
+  const when=new Date(); const p=n=>String(n).padStart(2,'0');
+  const out=[`БАТАРЕЯ · ${p(when.getDate())}.${p(when.getMonth()+1)}.${when.getFullYear()} ${p(when.getHours())}:${p(when.getMinutes())} · заряд ${TBL[S.charge].name}`];
+  (t?[t]:S.targets).forEach(tg=>{
+    out.push('', `Цель: ${targetLabel(tg)}  X= ${tg.x}  Y= ${tg.y}${tg.hit?'  [ПОРАЖЕНА]':''}`);
+    S.ops.forEach(op=>{
+      const r=opCalc(op,tg); if(!r.c) return; const f=r.eff.fire;
+      out.push(`${op.cs}: Д ${Math.round(r.c.dist)}, α ${fmtDU(r.c.dDU)}, угломер ${fmtDU(r.eff.uglDU)}, прицел ${f?f.pricel:'вне диапазона'}, доворот ${fmtDU(r.eff.dovDU)}, разрывов ${r.shots.length}`);
+    });
+  });
+  return out.join('\n');
+}
+function btCopy(el){ if(!S.ops.length||!S.targets.length){ toast('Нет данных'); return; } copyShare(el,batteryText(btCurTarget())); }
+
+// ══════════════════════════════════════════════════════════════════════════
+// АРХИВ ПО ДНЯМ + ВЫГРУЗКА / ЗАГРУЗКА
+// ══════════════════════════════════════════════════════════════════════════
+const DAYS_KEY='ac_days';
+function readDays(){ try{ return JSON.parse(localStorage.getItem(DAYS_KEY)||'{}'); }catch(e){ return {}; } }
+function writeDays(A){
+  const keys=Object.keys(A).sort(); while(keys.length>21) delete A[keys.shift()];
+  try{ localStorage.setItem(DAYS_KEY,JSON.stringify(A)); }catch(e){}
+}
+function _stateEmpty(){ return !S.ops.length && !S.targets.length; }
+function archiveNow(label){
+  if(_stateEmpty()) return;
+  const A=readDays(); A[label?ymd()+' '+label:ymd()]={saved:new Date().toISOString(),S:serS(S)}; writeDays(A);
+}
+let _dayT=null;
+function dayArchive(){ clearTimeout(_dayT); _dayT=setTimeout(()=>archiveNow(''),700); }
+function statsOf(st){
+  let sh=0; (st.targets||[]).forEach(t=>{ if(t.byOp) Object.values(t.byOp).forEach(a=>sh+=(a||[]).length); else sh+=(t.shots||[]).length; });
+  return {ops:(st.ops||[]).length,targets:(st.targets||[]).length,shots:sh};
+}
+function dlBlob(blob,name){
+  if(/iPhone|iPad|iPod/i.test(navigator.userAgent) && navigator.canShare){
+    try{ const f=new File([blob],name,{type:blob.type}); if(navigator.canShare({files:[f]})){ navigator.share({files:[f],title:name}).catch(()=>{}); return; } }catch(e){}
+  }
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name;
+  document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },1500);
+}
+function exportState(stObj,name){
+  const pack={app:'АртКалк',ver:1,date:ymd(),saved:new Date().toISOString(),S:JSON.parse(typeof stObj==='string'?stObj:serS(stObj))};
+  dlBlob(new Blob([JSON.stringify(pack)],{type:'application/json'}),name);
+}
+function exportDayJSON(){
+  if(_stateEmpty()){ toast('Нет данных для выгрузки'); return; }
+  exportState(S,'Стрельба_'+ymd()+'.json'); toast('Файл выгружен');
+}
+function renderData(){
+  document.getElementById('dt-today').textContent=ymd();
+  const st=statsOf(S);
+  document.getElementById('dt-stat').textContent=`ОП: ${st.ops} · целей: ${st.targets} · разрывов: ${st.shots}`;
+  const A=readDays(), keys=Object.keys(A).sort().reverse();
+  document.getElementById('dt-days').innerHTML = keys.length ? keys.map(k=>{
+    let stt={ops:0,targets:0,shots:0}; try{ stt=statsOf(JSON.parse(A[k].S)); }catch(e){}
+    const when=new Date(A[k].saved), p=n=>String(n).padStart(2,'0');
+    return `<div class="dt-day"><div class="m"><b>${k}</b><span>ОП ${stt.ops} · целей ${stt.targets} · разрывов ${stt.shots} · ${p(when.getHours())}:${p(when.getMinutes())}</span></div>
+      <button class="bxs a" onclick="dayLoad('${k.replace(/'/g,"\\'")}')">Открыть</button>
+      <button class="bxs" onclick="dayExport('${k.replace(/'/g,"\\'")}')">Файл</button>
+      <button class="bxs d" onclick="dayDel('${k.replace(/'/g,"\\'")}')">✕</button></div>`;
+  }).join('') : '<div class="empty">Архив пуст</div>';
+}
+function dayLoad(k){ const A=readDays(); if(!A[k]) return; ldShow(JSON.parse(A[k].S),'архив '+k); }
+function dayExport(k){ const A=readDays(); if(A[k]) exportState(A[k].S,'Стрельба_'+k.replace(/\s+/g,'_')+'.json'); }
+function dayDel(k){ askConfirm('Удалить запись архива «'+k+'»?',()=>{ const A=readDays(); delete A[k]; writeDays(A); renderData(); }); }
+
+let _ldSrc=null;
+function loadFileChosen(inp){
+  const f=inp.files&&inp.files[0]; inp.value=''; if(!f) return;
+  const rd=new FileReader();
+  rd.onload=()=>{
+    try{
+      const o=JSON.parse(rd.result); const st=o&&o.S?o.S:o;
+      if(!st||!Array.isArray(st.ops)||!Array.isArray(st.targets)) throw new Error('формат');
+      ldShow(st,f.name);
+    }catch(e){ toast('Не удалось прочитать файл: это не резервная копия'); }
+  };
+  rd.readAsText(f);
+}
+function ldShow(st,name){
+  _ldSrc=st; const a=statsOf(st), b=statsOf(S);
+  document.getElementById('ld-info').innerHTML=
+    `<div class="imp-it"><span class="imp-t">ФАЙЛ</span><b>${name}</b></div>
+     <div class="imp-it"><span class="imp-t">В НЁМ</span>ОП ${a.ops} · целей ${a.targets} · разрывов ${a.shots}</div>
+     <div class="imp-it"><span class="imp-t">СЕЙЧАС</span>ОП ${b.ops} · целей ${b.targets} · разрывов ${b.shots}</div>
+     <div class="imp-it"><span class="mut">«Заменить» перед загрузкой делает копию текущих данных в архив. «Добавить» подмешивает ОП, цели и новые разрывы, ничего не стирая.</span></div>`;
+  document.getElementById('ldlg').classList.add('on');
+}
+function ldClose(){ document.getElementById('ldlg').classList.remove('on'); _ldSrc=null; }
+let _uid=0; const newId=()=>Date.now()+(++_uid);
+function ldApply(mode){
+  const src=_ldSrc; if(!src) return;
+  archiveNow('до загрузки');
+  if(mode==='replace'){
+    S=Object.assign({ops:[],activeOpId:null,charge:'4',targets:[],active:null,tgNum:0},JSON.parse(JSON.stringify(src)));
+    if(!TBL[S.charge]) S.charge='4';
+    S.targets.forEach(t=>{ if(!t.shots) t.shots=[]; });
+    if(S.activeOpId!=null && !S.ops.find(o=>o.id===S.activeOpId)) S.activeOpId=S.ops.length?S.ops[0].id:null;
+  } else {
+    const idMap={};
+    (src.ops||[]).forEach(o=>{
+      let ex=S.ops.find(q=>q.cs===o.cs&&q.x===o.x&&q.y===o.y);
+      if(!ex){ ex=Object.assign({},o,{id:newId()}); S.ops.push(ex); }
+      idMap[o.id]=ex.id;
+    });
+    (src.targets||[]).forEach(t=>{
+      let ex=S.targets.find(q=>q.x===t.x&&q.y===t.y);
+      if(!ex){
+        let num=t.num; if(num==null||S.targets.some(q=>String(q.num)===String(num))) num=(S.tgNum||0)+1;
+        S.tgNum=Math.max(S.tgNum||0,num);
+        ex=Object.assign({},t,{id:newId(),num,shots:[],byOp:{},corrUgl:0,corrRange:0,corrP:0}); delete ex.byOp; S.targets.push(ex);
+      }
+      let by=t.byOp; if(!by && src.activeOpId!=null) by={[src.activeOpId]:t.shots||[]};
+      Object.keys(by||{}).forEach(oid=>{
+        const nid=idMap[oid]; if(nid===undefined) return;
+        if(!ex.byOp){ ex.byOp={}; if(S.activeOpId!=null) ex.byOp[S.activeOpId]=ex.shots||[]; }
+        const arr=ex.byOp[nid]=ex.byOp[nid]||[];
+        by[oid].forEach(sh=>{
+          const key=Math.round(ex.x+sh.dev.north)+','+Math.round(ex.y+sh.dev.east);
+          if(!arr.some(q=>Math.round(ex.x+q.dev.north)+','+Math.round(ex.y+q.dev.east)===key)) arr.push(JSON.parse(JSON.stringify(sh)));
+        });
+        arr.forEach((q,i)=>{ q.num=i+1; });
+      });
+    });
+    if(S.activeOpId==null && S.ops.length) S.activeOpId=S.ops[0].id;
+  }
+  document.getElementById('charge').value=S.charge||'4';
+  S.targets.forEach(t=>{ delete t.shots; });          // пересобрать ссылки t.shots → byOp
+  S.targets.forEach(t=>{ if(!t.byOp){ t.shots=[]; } });
+  syncOpCtx(); save();
+  ldClose();
+  renderOPResult(); renderOPList(); renderTargets(); renderFire(); renderData();
+  toast(mode==='replace'?'Данные заменены (прежние — в архиве)':'Данные добавлены');
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// PDF-ЖУРНАЛ СТРЕЛЬБЫ (без библиотек: страницы рисуются на canvas и собираются в PDF)
+// ══════════════════════════════════════════════════════════════════════════
+function buildReportPages(scope){
+  const targets = scope==='all' ? S.targets : S.targets.filter(t=>t.id===scope);
+  if(!targets.length || !S.ops.length) return null;
+  const W=1240,H=1754,M=90,BOT=H-120,FONT='Arial, Helvetica, sans-serif';
+  const pages=[]; let cv,cx,y;
+  const font=(px,b)=>{ cx.font=(b?'700 ':'')+px+'px '+FONT; };
+  const newPage=()=>{
+    cv=document.createElement('canvas'); cv.width=W; cv.height=H; cx=cv.getContext('2d');
+    cx.fillStyle='#fff'; cx.fillRect(0,0,W,H); cx.textBaseline='top'; pages.push(cv); y=M;
+    if(pages.length>1){ font(22); cx.fillStyle='#777'; cx.textAlign='left'; cx.fillText('Журнал стрельбы · '+ymd(),M,40); }
+  };
+  const need=h=>{ if(y+h>BOT) newPage(); };
+  const txt=(s,x,px,o)=>{ o=o||{}; font(px,o.b); cx.fillStyle=o.color||'#111'; cx.textAlign=o.al||'left'; cx.fillText(s,x,y); };
+  const fit=(s,maxW,px,b)=>{ font(px,b); s=String(s); if(cx.measureText(s).width<=maxW) return s; while(s.length>1 && cx.measureText(s+'…').width>maxW) s=s.slice(0,-1); return s+'…'; };
+  const line=(x1,y1,x2,c)=>{ cx.strokeStyle=c||'#bbb'; cx.lineWidth=2; cx.beginPath(); cx.moveTo(x1,y1); cx.lineTo(x2,y1); cx.stroke(); };
+  const table=(cols,head,rows,px)=>{
+    const rh=Math.round(px*1.9);
+    const drawRow=(cells,b,fill)=>{
+      need(rh); if(fill){ cx.fillStyle=fill; cx.fillRect(M,y-4,W-2*M,rh); }
+      let x=M; cols.forEach((c,i)=>{ const t=fit(cells[i],c.w-14,px,b); const tx=c.al==='r'?x+c.w-8:(c.al==='c'?x+c.w/2:x+8); txt(t,tx,px,{b,al:c.al==='r'?'right':(c.al==='c'?'center':'left')}); x+=c.w; });
+      y+=rh; line(M,y-4,W-M);
+    };
+    drawRow(head,true,'#eceae4'); rows.forEach(r=>drawRow(r,false));
+  };
+  newPage();
+  const now=new Date(), p2=n=>String(n).padStart(2,'0');
+  txt('ЖУРНАЛ СТРЕЛЬБЫ',M,52,{b:true}); y+=70;
+  txt(`${p2(now.getDate())}.${p2(now.getMonth()+1)}.${now.getFullYear()}  ${p2(now.getHours())}:${p2(now.getMinutes())}`,M,28,{color:'#555'}); y+=40;
+  txt(`Заряд: ${TBL[S.charge].name} · дальность ${TBL[S.charge].data[0][0]}–${TBL[S.charge].data[TBL[S.charge].data.length-1][0]} м`,M,26,{color:'#555'}); y+=50;
+  txt('Огневые позиции (расчёты)',M,32,{b:true}); y+=46;
+  table([{w:230},{w:220,al:'r'},{w:220,al:'r'},{w:195,al:'c'},{w:195,al:'c'}],['Позывной','X','Y','ОТН','ОН'],
+    S.ops.map(o=>[o.cs,String(o.x),String(o.y),String(o.otn),String(o.on)]),26);
+  y+=34;
+  targets.forEach(t=>{
+    need(220);
+    txt('Цель: '+targetLabel(t)+(t.hit?'   [ПОРАЖЕНА]':''),M,34,{b:true}); y+=48;
+    txt(`X= ${t.x}   Y= ${t.y}${t.h?'   H= '+t.h:''}${t.front||t.depth?'   Фронт= '+(t.front||0)+'  Глубина= '+(t.depth||0):''}`,M,26,{color:'#555'}); y+=44;
+    let any=false;
+    S.ops.forEach(op=>{
+      const r=opCalc(op,t); if(!r.c) return; any=true;
+      const f=r.eff.fire;
+      need(200);
+      txt(op.cs,M,30,{b:true}); 
+      txt(`Д ${Math.round(r.c.dist)} м · α ${fmtDU(r.c.dDU)} · исходно: угломер ${fmtDU(r.c.uglDU)}, прицел ${r.c.fire?r.c.fire.pricel:'—'}, доворот ${fmtDU(r.c.dovDU)}`,M+200,24,{color:'#444'}); y+=44;
+      if(r.shots.length){
+        table([{w:62,al:'c'},{w:96,al:'c'},{w:376},{w:130,al:'r'},{w:198,al:'c'},{w:198,al:'c'}],
+          ['№','Время','Отклонение','Д разр.','Угломер','Прицел'],
+          r.shots.map(s=>[String(s.num),hm(s.ts),shotText(s).replace(/ \(от цели:[^)]*\)/,''),s.distBurst!==undefined?String(Math.round(s.distBurst)):'—',
+            (s.uglShot!==undefined?fmtDU(s.uglShot):'—')+' → '+(s.uglNew!==undefined?fmtDU(s.uglNew):'—'),
+            (s.pricelShot!=null?s.pricelShot:'—')+' → '+(s.pricelNew!=null?s.pricelNew:'—')]),24);
+      } else { txt('разрывов нет',M+10,24,{color:'#777'}); y+=40; }
+      need(70);
+      txt(`ИТОГ: угломер ${fmtDU(r.eff.uglDU)} · прицел ${f?f.pricel:'вне диапазона'} · доворот ${fmtDU(r.eff.dovDU)}${f?' · время полёта '+f.time+' с':''}`,M,28,{b:true,color:'#0d3b66'}); y+=58;
+    });
+    if(!any){ txt('нет расчёта (проверьте координаты ОП)',M,24,{color:'#c62828'}); y+=40; }
+    y+=24;
+  });
+  pages.forEach((c,i)=>{ const g=c.getContext('2d'); g.textBaseline='top'; g.font='22px '+FONT; g.fillStyle='#777'; g.textAlign='center'; g.fillText(`Стр. ${i+1} из ${pages.length}`,W/2,H-70); g.textAlign='left'; g.fillText('Сформировано в приложении',M,H-70); });
+  return pages;
+}
+function buildPDF(jpegs){
+  const enc=new TextEncoder(), chunks=[], offs=[]; let len=0;
+  const push=b=>{ if(typeof b==='string') b=enc.encode(b); chunks.push(b); len+=b.length; };
+  push('%PDF-1.4\n'); push(new Uint8Array([0x25,0xE2,0xE3,0xCF,0xD3,0x0A]));
+  const n=jpegs.length;
+  const obj=(id,fn)=>{ offs[id]=len; push(id+' 0 obj\n'); fn(); push('\nendobj\n'); };
+  obj(1,()=>push('<< /Type /Catalog /Pages 2 0 R >>'));
+  obj(2,()=>push('<< /Type /Pages /Count '+n+' /Kids ['+jpegs.map((_,i)=>(3+3*i)+' 0 R').join(' ')+'] >>'));
+  jpegs.forEach((j,i)=>{
+    const pid=3+3*i,cid=4+3*i,iid=5+3*i, cs='q 595.28 0 0 841.89 0 0 cm /Im0 Do Q';
+    obj(pid,()=>push(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /XObject << /Im0 ${iid} 0 R >> >> /Contents ${cid} 0 R >>`));
+    obj(cid,()=>push(`<< /Length ${cs.length} >>\nstream\n${cs}\nendstream`));
+    obj(iid,()=>{ push(`<< /Type /XObject /Subtype /Image /Width ${j.w} /Height ${j.h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${j.bytes.length} >>\nstream\n`); push(j.bytes); push('\nendstream'); });
+  });
+  const xref=len, total=3*n+3;
+  push('xref\n0 '+total+'\n0000000000 65535 f \n');
+  for(let id=1;id<total;id++) push(String(offs[id]).padStart(10,'0')+' 00000 n \n');
+  push('trailer\n<< /Size '+total+' /Root 1 0 R >>\nstartxref\n'+xref+'\n%%EOF');
+  return new Blob(chunks,{type:'application/pdf'});
+}
+function exportPDF(scope){
+  const pages=buildReportPages(scope);
+  if(!pages){ toast('Нет данных для журнала'); return; }
+  const jpegs=pages.map(c=>{
+    const b64=c.toDataURL('image/jpeg',0.92).split(',')[1], bin=atob(b64), u=new Uint8Array(bin.length);
+    for(let i=0;i<bin.length;i++) u[i]=bin.charCodeAt(i);
+    return {bytes:u,w:c.width,h:c.height};
+  });
+  const blob=buildPDF(jpegs);
+  let nm='Журнал_стрельбы_'+ymd();
+  if(scope!=='all'){ const t=S.targets.find(x=>x.id===scope); if(t) nm='Журнал_'+targetLabel(t).replace(/[^\wА-Яа-яЁё-]+/g,'_')+'_'+ymd(); }
+  dlBlob(blob,nm+'.pdf'); toast('PDF сформирован');
+  window.__lastPDF=blob;
+}
+
 // INIT OP
+syncOpCtx();
 renderOPResult();
 renderOPList();
 document.getElementById('charge').value=S.charge||'4';
@@ -1192,6 +1867,7 @@ function delTarget(id){
 }
 
 function clearTargets(){
+  archiveNow('до очистки целей');
   askConfirm('Удалить все цели?', ()=>{
     S.targets=[]; S.active=null; save(); renderTargets();
   });
@@ -1286,8 +1962,7 @@ function renderTargets(){
       <div class="tn">${t.name}${t.hit?'<span class="hitb">ПОРАЖЕНА</span>':''}${isSel?' ◀ активная':''}</div>
       <div class="tm">${meta}</div>
       <div class="tc" onclick="event.stopPropagation()">
-        <span class="cbtn" onclick="copyFull(this,${t.id})">${ic('copy')} Скопировать цель</span>
-        <span class="cbtn" onclick="shareFull(${t.id})">${ic('send')} Передать</span>
+        <span class="cbtn" onclick="copyFull(this,${t.id})">${ic('copy')} Скопировать / передать</span>
         <span class="cbtn" onclick="findOnMap(${t.x},${t.y})">${ic('map')} На карте</span>
       </div>
       <div class="ta" onclick="event.stopPropagation()">
@@ -1315,10 +1990,15 @@ function targetText(t){
   return `${t.name}\nX= ${t.x}\nY= ${t.y}\nH= ${h}\nФронт= ${front}, Глубина= ${depth}`;
 }
 
+// Одна кнопка: копирует в буфер и (на телефоне) сразу открывает меню «Поделиться»
+function copyShare(el, text){
+  copyCoord(el, text);
+  if(navigator.share && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) navigator.share({text}).catch(()=>{});
+}
 function copyFull(el, id){
   const t=S.targets.find(x=>x.id===id);
   if(!t) return;
-  copyCoord(el, targetText(t));
+  copyShare(el, targetText(t));
 }
 
 function shareFull(id){
@@ -1485,7 +2165,7 @@ function addShot(){
   const effNew = calcEffective(t, c);
 
   t.shots.push({
-    num:t.shots.length+1, sfM, dvM, dev, uglShot, pricelShot, distBurst, inDU:tgtIn?tgtIn.du:undefined, inM:tgtIn?tgtIn.m:undefined, charge:S.charge, chargeName:TBL[S.charge].name, corrPApplied:corrPDelta, corrPRaw:-dPr, dirDU:c.dDU, basisDU, basisSrc,
+    num:t.shots.length+1, sfM, dvM, dev, uglShot, pricelShot, distBurst, inDU:tgtIn?tgtIn.du:undefined, inM:tgtIn?tgtIn.m:undefined, ts:Date.now(), charge:S.charge, chargeName:TBL[S.charge].name, corrPApplied:corrPDelta, corrPRaw:-dPr, dirDU:c.dDU, basisDU, basisSrc,
     corrRangeApplied, corrUglApplied,
     distNew: effNew.dist, uglNew: effNew.uglDU,
     pricelNew: effNew.fire?effNew.fire.pricel:null
@@ -1564,7 +2244,7 @@ function copyCorr(el){
   if(!t) return;
   const text=buildCorrText(t);
   if(!text){ alert('Сначала зафиксируйте хотя бы один разрыв'); return; }
-  copyCoord(el, text);
+  copyShare(el, text);
 }
 
 function shareCorr(){
@@ -1744,7 +2424,7 @@ function buildFullText(t){
     t.shots.forEach(sh=>{
       const sf = sh.sfM===0?'по дальности':(sh.sfM<0?'недолёт ':'перелёт ')+Math.abs(sh.sfM);
       const dv = sh.dvM===0?'по направлению':(sh.dvM>0?'правее ':'левее ')+Math.abs(sh.dvM);
-      let r=`№${sh.num}: ${sf}, ${dv}${sh.basisSrc&&sh.basisSrc!=='ОП'?' [от '+sh.basisSrc+']':''}${sh.inDU!==undefined?' (дир. '+fmtDU(sh.inDU)+', '+sh.inM+' м)':''}${sh.chargeName?' (заряд '+sh.chargeName+')':''}`;
+      let r=`№${sh.num}: ${sf}, ${dv}${sh.basisSrc&&sh.basisSrc!=='ОП'?' [от '+sh.basisSrc+']':''}${sh.inDU!==undefined?' (дир. '+fmtDU(sh.inDU)+', '+sh.inM+' м)':''}${sh.chargeName?' (заряд '+sh.chargeName+')':''} (разрыв X= ${Math.round(t.x+sh.dev.north)}, Y= ${Math.round(t.y+sh.dev.east)})`;
       if(sh.uglNew!==undefined) r+=` → угломер ${fmtDU(sh.uglNew)}, прицел ${sh.pricelNew!==null?sh.pricelNew:'вне диап.'}`;
       lines.push(r);
     });
@@ -1757,14 +2437,15 @@ function buildFullText(t){
 function copyAll(el){
   const t=getAT();
   if(!t) return;
-  copyCoord(el, buildFullText(t));
+  copyShare(el, buildFullText(t));
 }
 
 function clearShots(){
   const t=getAT();
   if(!t) return;
+  archiveNow('до сброса разрывов');
   askConfirm('Сбросить историю разрывов?', ()=>{
-    t.shots=[]; t.corrUgl=0; t.corrRange=0; t.corrP=0; save(); renderFire();
+    t.shots.length=0; t.corrUgl=0; t.corrRange=0; t.corrP=0; save(); renderFire();
   });
 }
 
@@ -2458,7 +3139,7 @@ function renderShots(t){
       renderPanel(); draw(false); openTarget(t.id);
     },
     open(){
-      ['op','tg','fi'].forEach(x=>{ $('p-'+x).classList.remove('on'); $('nb-'+x).classList.remove('on'); });
+      ['op','tg','fi','bt','dt'].forEach(x=>{ $('p-'+x).classList.remove('on'); if($('nb-'+x)) $('nb-'+x).classList.remove('on'); });
       document.querySelectorAll('.hdr .tb').forEach(b=>b.classList.remove('on'));
       $('p-map').classList.add('on'); $('nb-map').classList.add('on');
       renderPanel();
